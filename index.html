@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<!--
+  Minh bạch hóa chi phí điện nước nhà trọ
+  Giấy phép: MIT — xem file LICENSE ở gốc dự án.
+
+  Ghi chú kỹ thuật: file này KHÔNG dùng bất kỳ thư viện hay CDN bên ngoài
+  (không Tailwind CDN, không icon font, không web font) để ứng dụng chạy
+  được hoàn toàn khi không có mạng — quan trọng khi trình diễn trực tuyến.
+-->
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Minh bạch chi phí điện nước nhà trọ</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="thanh-dau">
+  <div class="khoi-giua thanh-dau__noi-dung">
+    <div class="thuong-hieu">
+      <svg class="bieu-tuong" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M13 2L4.5 13H11l-1 9 8.5-11H12l1-9z" />
+      </svg>
+      <div>
+        <h1>Minh bạch chi phí điện nước nhà trọ</h1>
+        <p>Công cụ nguồn mở giúp người thuê tự tính và đối chiếu hóa đơn</p>
+      </div>
+    </div>
+    <span class="nhan nhan--sang">Giấy phép MIT</span>
+  </div>
+</header>
+
+<nav class="khoi-giua dai-tab" role="tablist">
+  <button class="tab tab--dang-chon" data-tab="tinh-toan" role="tab">Tính toán &amp; đối chiếu</button>
+  <button class="tab" data-tab="quy-dinh" role="tab">Căn cứ pháp lý</button>
+  <button class="tab" data-tab="kiem-thu" role="tab">Kiểm thử</button>
+</nav>
+
+<main class="khoi-giua noi-dung">
+
+  <!-- ============ TAB 1: TÍNH TOÁN ============ -->
+  <section id="tab-tinh-toan" class="khung-tab">
+    <div class="luoi">
+
+      <!-- Cột nhập liệu -->
+      <form id="bieu-mau" class="the the--nhap-lieu" autocomplete="off">
+        <h2 class="the__tieu-de">Thông số đầu vào</h2>
+
+        <div class="nhom">
+          <label for="ngay-tinh">Kỳ tính tiền</label>
+          <input type="date" id="ngay-tinh" />
+          <p class="ghi-chu">Dùng để chọn đúng biểu giá và thuế suất đang có hiệu lực tại thời điểm đó.</p>
+        </div>
+
+        <hr />
+
+        <fieldset class="nhom">
+          <legend>Trường hợp đăng ký điện</legend>
+          <label class="lua-chon">
+            <input type="radio" name="keKhai" value="co" checked />
+            <span>
+              <strong>Đã kê khai đủ số người</strong>
+              Được tính lũy tiến bậc thang, ngưỡng mỗi bậc nhân theo định mức số người.
+            </span>
+          </label>
+          <label class="lua-chon">
+            <input type="radio" name="keKhai" value="khong" />
+            <span>
+              <strong>Hợp đồng &lt; 12 tháng, không kê khai</strong>
+              Toàn bộ sản lượng bị áp một đơn giá cố định của bậc 3.
+            </span>
+          </label>
+        </fieldset>
+
+        <div class="nhom">
+          <label for="so-nguoi">Số người ở thực tế</label>
+          <input type="number" id="so-nguoi" min="1" max="30" step="1" value="3" />
+          <p class="ghi-chu">Cứ 4 người = 1 định mức. Dưới 4 người quy đổi 1/4 định mức mỗi người.</p>
+        </div>
+
+        <div class="nhom">
+          <label for="so-kwh">Điện tiêu thụ trong kỳ (kWh)</label>
+          <input type="number" id="so-kwh" min="0" step="1" value="185" class="o-nhap-chinh" />
+        </div>
+
+        <div class="nhom">
+          <label for="tien-chu-tro-thu-dien">Số tiền điện chủ trọ đang thu (đ)</label>
+          <div class="hang-nhap">
+            <input type="number" id="tien-chu-tro-thu-dien" min="0" step="1000" value="740000" />
+            <button type="button" id="nut-tinh-tu-don-gia" class="nut nut--phu" title="Nhập đơn giá đ/kWh rồi tự tính">
+              Từ đơn giá…
+            </button>
+          </div>
+          <p class="ghi-chu">Để trống hoặc 0 nếu chưa muốn đối chiếu.</p>
+        </div>
+
+        <hr />
+
+        <div class="nhom">
+          <label class="cong-tac">
+            <input type="checkbox" id="bat-tinh-nuoc" />
+            <span>Tính thêm tiền nước</span>
+          </label>
+        </div>
+
+        <div id="khoi-nuoc" class="khoi-phu" hidden>
+          <div class="nhom">
+            <label for="dia-phuong">Cách tính / địa phương</label>
+            <select id="dia-phuong"></select>
+            <p class="ghi-chu" id="ghi-chu-dia-phuong"></p>
+          </div>
+          <div class="nhom" id="nhom-so-m3">
+            <label for="so-m3">Lượng nước tiêu thụ (m³)</label>
+            <input type="number" id="so-m3" min="0" step="0.1" value="12" />
+          </div>
+          <div class="nhom">
+            <label for="tien-chu-tro-thu-nuoc">Số tiền nước chủ trọ đang thu (đ)</label>
+            <input type="number" id="tien-chu-tro-thu-nuoc" min="0" step="1000" value="240000" />
+          </div>
+        </div>
+
+        <div class="hang-nut">
+          <button type="submit" class="nut nut--chinh">Tính toán</button>
+          <button type="reset" class="nut nut--phu" id="nut-dat-lai">Đặt lại</button>
+        </div>
+
+        <p class="canh-bao-nho">
+          Công cụ tham khảo, không thay thế hóa đơn chính thức của đơn vị bán điện/nước.
+        </p>
+      </form>
+
+      <!-- Cột kết quả -->
+      <div class="cot-ket-qua">
+
+        <div id="hop-canh-bao" class="hop-canh-bao" hidden>
+          <div class="hop-canh-bao__tieu-de" id="canh-bao-tieu-de"></div>
+          <p class="hop-canh-bao__noi-dung" id="canh-bao-noi-dung"></p>
+        </div>
+
+        <div class="the the--tong-quan">
+          <h2 class="the__tieu-de">Tổng quan</h2>
+          <div class="luoi-so">
+            <div class="o-so">
+              <span class="o-so__nhan">Chủ trọ đang thu</span>
+              <span class="o-so__gia-tri" id="so-thuc-thu">—</span>
+            </div>
+            <div class="o-so o-so--nhan-manh">
+              <span class="o-so__nhan">Đúng theo quy định</span>
+              <span class="o-so__gia-tri" id="so-hop-phap">—</span>
+            </div>
+            <div class="o-so">
+              <span class="o-so__nhan">Chênh lệch</span>
+              <span class="o-so__gia-tri" id="so-chenh-lech">—</span>
+            </div>
+          </div>
+          <div class="dai-chi-tiet" id="dai-chi-tiet"></div>
+        </div>
+
+        <!-- Kết quả điện -->
+        <div class="the" id="the-dien">
+          <h2 class="the__tieu-de">
+            Tiền điện
+            <span class="nhan" id="nhan-che-do-dien"></span>
+          </h2>
+
+          <ol class="danh-sach-buoc" id="dien-giai-dien"></ol>
+
+          <div class="bao-bang">
+            <table class="bang">
+              <thead>
+                <tr>
+                  <th>Bậc</th>
+                  <th>Khung sau khi nhân định mức (kWh)</th>
+                  <th class="phai">Đơn giá (đ/kWh)</th>
+                  <th class="phai">Sản lượng (kWh)</th>
+                  <th class="phai">Thành tiền (đ)</th>
+                </tr>
+              </thead>
+              <tbody id="bang-dien"></tbody>
+              <tfoot id="bang-dien-chan"></tfoot>
+            </table>
+          </div>
+          <p class="ghi-chu" id="can-cu-dien"></p>
+        </div>
+
+        <!-- Kết quả nước -->
+        <div class="the" id="the-nuoc" hidden>
+          <h2 class="the__tieu-de">
+            Tiền nước
+            <span class="nhan" id="nhan-che-do-nuoc"></span>
+          </h2>
+
+          <ol class="danh-sach-buoc" id="dien-giai-nuoc"></ol>
+
+          <div class="bao-bang">
+            <table class="bang">
+              <thead>
+                <tr>
+                  <th>Bậc</th>
+                  <th>Khung (m³)</th>
+                  <th class="phai">Đơn giá (đ)</th>
+                  <th class="phai">Lượng</th>
+                  <th class="phai">Thành tiền (đ)</th>
+                </tr>
+              </thead>
+              <tbody id="bang-nuoc"></tbody>
+              <tfoot id="bang-nuoc-chan"></tfoot>
+            </table>
+          </div>
+          <p class="ghi-chu" id="can-cu-nuoc"></p>
+        </div>
+
+        <div class="hang-nut hang-nut--phai">
+          <button type="button" class="nut nut--phu" id="nut-sao-chep">Sao chép bản đối chiếu</button>
+          <button type="button" class="nut nut--phu" id="nut-in">In / lưu PDF</button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2: CĂN CỨ PHÁP LÝ ============ -->
+  <section id="tab-quy-dinh" class="khung-tab" hidden>
+    <div class="the">
+      <h2 class="the__tieu-de">Biểu giá đang áp dụng</h2>
+      <p class="ghi-chu" id="mo-ta-bieu-gia"></p>
+      <div class="bao-bang">
+        <table class="bang">
+          <thead>
+            <tr>
+              <th>Bậc</th>
+              <th>Khung chuẩn cho 1 hộ (kWh)</th>
+              <th class="phai">Đơn giá (đ/kWh)</th>
+            </tr>
+          </thead>
+          <tbody id="bang-bieu-gia-goc"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="the">
+      <h2 class="the__tieu-de">Văn bản tham chiếu</h2>
+      <ul class="danh-sach-van-ban" id="danh-sach-van-ban"></ul>
+    </div>
+
+    <div class="the">
+      <h2 class="the__tieu-de">Vì sao tách cấu hình khỏi mã nguồn</h2>
+      <p>
+        Biểu giá bán lẻ điện được xem xét điều chỉnh định kỳ, còn chính sách giảm thuế GTGT
+        có thời hạn hiệu lực. Nếu viết cứng các con số này trong mã nguồn, sản phẩm sẽ mất
+        giá trị sử dụng ngay sau lần điều chỉnh đầu tiên.
+      </p>
+      <p>
+        Trong dự án này, toàn bộ đơn giá, ngưỡng bậc, thuế suất, định mức và mức xử phạt nằm
+        trong thư mục <code>config/</code> dưới dạng JSON, kèm ngày hiệu lực. Chương trình tự
+        chọn phiên bản đúng theo kỳ tính tiền mà người dùng nhập. Muốn cập nhật khi quy định
+        thay đổi, chỉ cần thêm một phiên bản mới vào file JSON — không sửa, không biên dịch lại
+        phần mã đã được kiểm thử.
+      </p>
+      <p>
+        Tương tự với nước: mỗi địa phương là một phần tử trong <code>config/water-rates.json</code>,
+        khai báo theo một trong ba phương thức thu (lũy tiến theo định mức, giá phẳng, khoán đầu
+        người). Hỗ trợ thêm một tỉnh là thêm dữ liệu, không phải viết thêm code.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ TAB 3: KIỂM THỬ ============ -->
+  <section id="tab-kiem-thu" class="khung-tab" hidden>
+    <div class="the">
+      <div class="the__dau-co-nut">
+        <div>
+          <h2 class="the__tieu-de">Kiểm thử lõi tính toán</h2>
+          <p class="ghi-chu">
+            Cùng bộ test chạy được bằng dòng lệnh: <code>node tests/pricing-engine.test.js</code>
+          </p>
+        </div>
+        <button type="button" class="nut nut--chinh" id="nut-chay-test">Chạy kiểm thử</button>
+      </div>
+      <div id="ket-qua-test"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="chan-trang">
+  <div class="khoi-giua chan-trang__noi-dung">
+    <span>Dự án nguồn mở — giấy phép MIT</span>
+    <span id="chan-trang-cau-hinh"></span>
+  </div>
+</footer>
+
+<!-- Thứ tự nạp: lõi tính toán → diễn giải → dữ liệu test → điều khiển giao diện -->
+<script src="src/pricing-engine.js?v=0.2.0"></script>
+<script src="src/explain.js?v=0.2.0"></script>
+<script src="tests/test-cases.js?v=0.2.0"></script>
+<script src="src/app.js?v=0.2.0"></script>
+</body>
+</html>
