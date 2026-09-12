@@ -6,6 +6,16 @@
   Ghi chú kỹ thuật: file này KHÔNG dùng bất kỳ thư viện hay CDN bên ngoài
   (không Tailwind CDN, không icon font, không web font) để ứng dụng chạy
   được hoàn toàn khi không có mạng — quan trọng khi trình diễn trực tuyến.
+
+  ------------------------------------------------------------------
+  v0.3.0 — Phần nước được lồng vào cùng một form với phần điện.
+  QUAN TRỌNG CHO NGƯỜI BẢO TRÌ: toàn bộ id cũ mà app.js đang đọc đều
+  được GIỮ NGUYÊN trong DOM, chỉ bị ẩn đi khi có ô nhập mới thân thiện
+  hơn thay thế (xem các khối .o-cu-giu-lai). Lõi điện vẫn tách biệt
+  khỏi phần nước, còn app.js chỉ chịu trách nhiệm hiển thị phần điện.
+  src/hop-nhat.js là tầng chuyển đổi: đọc ô nhập mới → ghi vào ô cũ →
+  phát sự kiện input để app.js chạy như trước.
+  ------------------------------------------------------------------
 -->
 <html lang="vi">
 <head>
@@ -43,9 +53,14 @@
   <section id="tab-tinh-toan" class="khung-tab">
     <div class="luoi">
 
-      <!-- Cột nhập liệu -->
+      <!-- ================= CỘT NHẬP LIỆU ================= -->
       <form id="bieu-mau" class="the the--nhap-lieu" autocomplete="off">
         <h2 class="the__tieu-de">Thông số đầu vào</h2>
+
+        <p class="ghi-chu ghi-chu--mo-dau">
+          Chỉ cần những con số bạn đọc được trên giấy thu hoặc trên mặt đồng hồ.
+          Mọi phép tính do phần mềm làm.
+        </p>
 
         <div class="nhom">
           <label for="ngay-tinh">Kỳ tính tiền</label>
@@ -53,70 +68,195 @@
           <p class="ghi-chu">Dùng để chọn đúng biểu giá và thuế suất đang có hiệu lực tại thời điểm đó.</p>
         </div>
 
-        <hr />
-
-        <fieldset class="nhom">
-          <legend>Trường hợp đăng ký điện</legend>
-          <label class="lua-chon">
-            <input type="radio" name="keKhai" value="co" checked />
-            <span>
-              <strong>Đã kê khai đủ số người</strong>
-              Được tính lũy tiến bậc thang, ngưỡng mỗi bậc nhân theo định mức số người.
-            </span>
-          </label>
-          <label class="lua-chon">
-            <input type="radio" name="keKhai" value="khong" />
-            <span>
-              <strong>Hợp đồng &lt; 12 tháng, không kê khai</strong>
-              Toàn bộ sản lượng bị áp một đơn giá cố định của bậc 3.
-            </span>
-          </label>
-        </fieldset>
-
         <div class="nhom">
           <label for="so-nguoi">Số người ở thực tế</label>
           <input type="number" id="so-nguoi" min="1" max="30" step="1" value="3" />
-          <p class="ghi-chu">Cứ 4 người = 1 định mức. Dưới 4 người quy đổi 1/4 định mức mỗi người.</p>
+          <p class="ghi-chu">Dùng chung cho cả điện và nước. Cứ 4 người = 1 định mức điện;
+            định mức nước là 4 m³/người/tháng.</p>
         </div>
 
-        <div class="nhom">
-          <label for="so-kwh">Điện tiêu thụ trong kỳ (kWh)</label>
-          <input type="number" id="so-kwh" min="0" step="1" value="185" class="o-nhap-chinh" />
-        </div>
+        <!-- ---------------- PHẦN ĐIỆN ---------------- -->
+        <div class="phan-nhap phan-nhap--dien">
+          <h3 class="phan-nhap__tieu-de">Tiền điện</h3>
 
-        <div class="nhom">
-          <label for="tien-chu-tro-thu-dien">Số tiền điện chủ trọ đang thu (đ)</label>
-          <div class="hang-nhap">
-            <input type="number" id="tien-chu-tro-thu-dien" min="0" step="1000" value="740000" />
-            <button type="button" id="nut-tinh-tu-don-gia" class="nut nut--phu" title="Nhập đơn giá đ/kWh rồi tự tính">
-              Từ đơn giá…
-            </button>
-          </div>
-          <p class="ghi-chu">Để trống hoặc 0 nếu chưa muốn đối chiếu.</p>
-        </div>
+          <fieldset class="nhom">
+            <legend>Trường hợp đăng ký điện</legend>
+            <label class="lua-chon">
+              <input type="radio" name="keKhai" value="co" checked />
+              <span>
+                <strong>Đã kê khai đủ số người</strong>
+                Được tính lũy tiến bậc thang, ngưỡng mỗi bậc nhân theo định mức số người.
+              </span>
+            </label>
+            <label class="lua-chon">
+              <input type="radio" name="keKhai" value="khong" />
+              <span>
+                <strong>Hợp đồng &lt; 12 tháng, không kê khai</strong>
+                Toàn bộ sản lượng bị áp một đơn giá cố định của bậc 3.
+              </span>
+            </label>
+          </fieldset>
 
-        <hr />
+          <fieldset class="nhom">
+            <legend>Điện đã dùng trong kỳ</legend>
 
-        <div class="nhom">
-          <label class="cong-tac">
-            <input type="checkbox" id="bat-tinh-nuoc" />
-            <span>Tính thêm tiền nước</span>
-          </label>
-        </div>
+            <div class="dai-chon-nho">
+              <label class="chon-nho">
+                <input type="radio" name="cachNhapDien" value="soDo" checked />
+                <span>Tôi biết số kWh</span>
+              </label>
+              <label class="chon-nho">
+                <input type="radio" name="cachNhapDien" value="chiSo" />
+                <span>Tôi đọc chỉ số đồng hồ</span>
+              </label>
+            </div>
 
-        <div id="khoi-nuoc" class="khoi-phu" hidden>
+            <!-- Ô gốc của app.js: hiện khi nhập trực tiếp, ẩn khi nhập theo chỉ số -->
+            <div id="o-nhap-kwh">
+              <input type="number" id="so-kwh" min="0" step="1" value="185"
+                     class="o-nhap-chinh" aria-label="Số kWh đã dùng" />
+            </div>
+
+            <div id="o-nhap-chi-so-dien" class="hang-nhap" hidden>
+              <input type="number" id="chi-so-dien-dau" min="0" step="1" placeholder="Chỉ số đầu kỳ" />
+              <span class="dau-noi" aria-hidden="true">&rarr;</span>
+              <input type="number" id="chi-so-dien-cuoi" min="0" step="1" placeholder="Chỉ số cuối kỳ" />
+            </div>
+
+            <p class="ghi-chu" id="ghi-chu-kwh"></p>
+          </fieldset>
+
           <div class="nhom">
-            <label for="dia-phuong">Cách tính / địa phương</label>
-            <select id="dia-phuong"></select>
-            <p class="ghi-chu" id="ghi-chu-dia-phuong"></p>
+            <label for="cach-chu-tro-thu-dien">Chủ trọ đang thu tiền điện theo cách nào</label>
+            <select id="cach-chu-tro-thu-dien"></select>
+
+            <div id="o-thong-so-dien" class="nhom nhom--lien">
+              <label for="thong-so-chu-tro-dien" id="nhan-thong-so-dien"></label>
+              <div class="hang-nhap">
+                <input type="number" id="thong-so-chu-tro-dien" min="0" step="500" value="4000" />
+                <span class="don-vi" id="don-vi-dien"></span>
+              </div>
+            </div>
+
+            <p class="ghi-chu" id="ghi-chu-chu-tro-dien"></p>
           </div>
-          <div class="nhom" id="nhom-so-m3">
-            <label for="so-m3">Lượng nước tiêu thụ (m³)</label>
-            <input type="number" id="so-m3" min="0" step="0.1" value="12" />
+
+          <!--
+            ===== Ô CŨ ĐƯỢC GIỮ LẠI =====
+            app.js đọc #tien-chu-tro-thu-dien và gắn sự kiện vào
+            #nut-tinh-tu-don-gia. Hai phần tử này phải tồn tại, nên chỉ bị ẩn.
+            src/hop-nhat.js tự điền giá trị vào đây.
+          -->
+          <div class="o-cu-giu-lai" hidden>
+            <label for="tien-chu-tro-thu-dien">Số tiền điện chủ trọ đang thu (đ)</label>
+            <div class="hang-nhap">
+              <input type="number" id="tien-chu-tro-thu-dien" min="0" step="1000" value="740000" />
+              <button type="button" id="nut-tinh-tu-don-gia" class="nut nut--phu" tabindex="-1">
+                Từ đơn giá…
+              </button>
+            </div>
           </div>
-          <div class="nhom">
-            <label for="tien-chu-tro-thu-nuoc">Số tiền nước chủ trọ đang thu (đ)</label>
-            <input type="number" id="tien-chu-tro-thu-nuoc" min="0" step="1000" value="240000" />
+        </div>
+
+        <!-- ---------------- PHẦN NƯỚC ---------------- -->
+        <div class="phan-nhap phan-nhap--nuoc">
+          <h3 class="phan-nhap__tieu-de">
+            Tiền nước
+            <label class="cong-tac cong-tac--phai">
+              <input type="checkbox" id="nuoc-bat" />
+              <span>Tính thêm</span>
+            </label>
+          </h3>
+
+          <div id="khoi-nuoc" class="khoi-phu" hidden>
+
+            <div class="nhom">
+              <label for="nuoc-dia-phuong">Nơi ở hiện tại</label>
+              <select id="nuoc-dia-phuong"></select>
+              <p class="ghi-chu" id="nuoc-ghi-chu-dia-phuong"></p>
+            </div>
+
+            <div class="nhom" id="nhom-don-gia-tu-nhap" hidden>
+              <label for="don-gia-tu-nhap">Đơn giá nước ghi trên hóa đơn (đ/m³)</label>
+              <input type="number" id="don-gia-tu-nhap" min="0" step="100" value="0" />
+              <p class="ghi-chu">Chỉ cần khi địa phương của bạn chưa có biểu giá trong cấu hình.</p>
+            </div>
+
+            <fieldset class="nhom" id="nhom-so-m3">
+              <legend>Nước đã dùng trong kỳ</legend>
+
+              <div class="dai-chon-nho">
+                <label class="chon-nho">
+                  <input type="radio" name="cachNhapNuoc" value="soDo" checked />
+                  <span>Tôi biết số m³</span>
+                </label>
+                <label class="chon-nho">
+                  <input type="radio" name="cachNhapNuoc" value="chiSo" />
+                  <span>Tôi đọc chỉ số đồng hồ</span>
+                </label>
+              </div>
+
+              <div id="o-nhap-m3">
+                <input type="number" id="so-m3" min="0" step="0.1" value="12"
+                       class="o-nhap-chinh" aria-label="Số mét khối nước đã dùng" />
+              </div>
+
+              <div id="o-nhap-chi-so-nuoc" class="hang-nhap" hidden>
+                <input type="number" id="chi-so-nuoc-dau" min="0" step="0.1" placeholder="Chỉ số đầu kỳ" />
+                <span class="dau-noi" aria-hidden="true">&rarr;</span>
+                <input type="number" id="chi-so-nuoc-cuoi" min="0" step="0.1" placeholder="Chỉ số cuối kỳ" />
+              </div>
+
+              <p class="ghi-chu" id="ghi-chu-m3"></p>
+            </fieldset>
+
+            <div class="nhom">
+              <label for="cach-chu-tro-thu-nuoc">Chủ trọ đang thu tiền nước theo cách nào</label>
+              <select id="cach-chu-tro-thu-nuoc"></select>
+
+              <div id="o-thong-so-nuoc" class="nhom nhom--lien">
+                <label for="thong-so-chu-tro-nuoc" id="nhan-thong-so-nuoc"></label>
+                <div class="hang-nhap">
+                  <input type="number" id="thong-so-chu-tro-nuoc" min="0" step="1000" value="20000" />
+                  <span class="don-vi" id="don-vi-nuoc"></span>
+                </div>
+              </div>
+
+              <p class="ghi-chu" id="ghi-chu-chu-tro-nuoc"></p>
+            </div>
+
+            <div class="nhom" id="nhom-dinh-muc-nuoc">
+              <label class="cong-tac">
+                <input type="checkbox" id="co-dinh-muc-nuoc" checked />
+                <span>Đã được cấp định mức nước theo số người</span>
+              </label>
+              <p class="ghi-chu">
+                Bỏ dấu tích nếu bạn chưa đăng ký tạm trú tại phòng trọ, hoặc đồng hồ nước
+                chưa được cấp định mức nhân khẩu — khi đó toàn bộ số nước bị áp đơn giá bậc cao.
+              </p>
+            </div>
+
+            <!--
+              ===== Ô CŨ ĐƯỢC GIỮ LẠI =====
+              app.js bản cũ đọc #tien-chu-tro-thu-nuoc, #bat-tinh-nuoc và tự
+              đổ dữ liệu vào #dia-phuong theo schema cấu hình CŨ. Ba phần tử
+              này được giữ lại nhưng vô hiệu hóa:
+                - #bat-tinh-nuoc luôn KHÔNG được tích → nhánh tính nước cũ
+                  trong app.js không bao giờ chạy, nên bảng Tổng quan mà
+                  app.js ghi ra luôn là số của RIÊNG phần điện. hop-nhat.js
+                  dựa vào đó để cộng thêm phần nước mới.
+                - #dia-phuong để app.js đổ dữ liệu cũ vào mà không phá select
+                  mới (#nuoc-dia-phuong).
+              Nhờ vậy app.js không phải sửa một dòng nào.
+            -->
+            <div class="o-cu-giu-lai" hidden aria-hidden="true">
+              <input type="checkbox" id="bat-tinh-nuoc" />
+              <select id="dia-phuong" tabindex="-1"></select>
+              <p id="ghi-chu-dia-phuong"></p>
+              <label for="tien-chu-tro-thu-nuoc">Số tiền nước chủ trọ đang thu (đ)</label>
+              <input type="number" id="tien-chu-tro-thu-nuoc" min="0" step="1000" value="240000" />
+            </div>
+
           </div>
         </div>
 
@@ -130,7 +270,7 @@
         </p>
       </form>
 
-      <!-- Cột kết quả -->
+      <!-- ================= CỘT KẾT QUẢ ================= -->
       <div class="cot-ket-qua">
 
         <div id="hop-canh-bao" class="hop-canh-bao" hidden>
@@ -139,7 +279,10 @@
         </div>
 
         <div class="the the--tong-quan">
-          <h2 class="the__tieu-de">Tổng quan</h2>
+          <h2 class="the__tieu-de">
+            Tổng quan
+            <span class="nhan" id="nhan-pham-vi-tong-quan">Điện</span>
+          </h2>
           <div class="luoi-so">
             <div class="o-so">
               <span class="o-so__nhan">Chủ trọ đang thu</span>
@@ -155,6 +298,7 @@
             </div>
           </div>
           <div class="dai-chi-tiet" id="dai-chi-tiet"></div>
+          <div class="dai-chi-tiet" id="dai-chi-tiet-nuoc"></div>
         </div>
 
         <!-- Kết quả điện -->
@@ -191,6 +335,26 @@
             <span class="nhan" id="nhan-che-do-nuoc"></span>
           </h2>
 
+          <div id="hop-canh-bao-nuoc" class="hop-canh-bao" hidden>
+            <div class="hop-canh-bao__tieu-de" id="canh-bao-nuoc-tieu-de"></div>
+            <p class="hop-canh-bao__noi-dung" id="canh-bao-nuoc-noi-dung"></p>
+          </div>
+
+          <div class="luoi-so">
+            <div class="o-so">
+              <span class="o-so__nhan">Chủ trọ đang thu</span>
+              <span class="o-so__gia-tri" id="nuoc-chu-tro">—</span>
+            </div>
+            <div class="o-so o-so--nhan-manh">
+              <span class="o-so__nhan">Đúng theo quy định</span>
+              <span class="o-so__gia-tri" id="nuoc-quy-dinh">—</span>
+            </div>
+            <div class="o-so">
+              <span class="o-so__nhan">Chênh lệch</span>
+              <span class="o-so__gia-tri" id="nuoc-chenh-lech">—</span>
+            </div>
+          </div>
+
           <ol class="danh-sach-buoc" id="dien-giai-nuoc"></ol>
 
           <div class="bao-bang">
@@ -198,9 +362,9 @@
               <thead>
                 <tr>
                   <th>Bậc</th>
-                  <th>Khung (m³)</th>
-                  <th class="phai">Đơn giá (đ)</th>
-                  <th class="phai">Lượng</th>
+                  <th>Khung sau khi nhân định mức (m³)</th>
+                  <th class="phai">Đơn giá (đ/m³)</th>
+                  <th class="phai">Lượng (m³)</th>
                   <th class="phai">Thành tiền (đ)</th>
                 </tr>
               </thead>
@@ -209,6 +373,7 @@
             </table>
           </div>
           <p class="ghi-chu" id="can-cu-nuoc"></p>
+          <p class="ghi-chu-nho" id="nguon-cau-hinh-nuoc"></p>
         </div>
 
         <div class="hang-nut hang-nut--phai">
@@ -223,7 +388,7 @@
   <!-- ============ TAB 2: CĂN CỨ PHÁP LÝ ============ -->
   <section id="tab-quy-dinh" class="khung-tab" hidden>
     <div class="the">
-      <h2 class="the__tieu-de">Biểu giá đang áp dụng</h2>
+      <h2 class="the__tieu-de">Biểu giá điện đang áp dụng</h2>
       <p class="ghi-chu" id="mo-ta-bieu-gia"></p>
       <div class="bao-bang">
         <table class="bang">
@@ -237,6 +402,24 @@
           <tbody id="bang-bieu-gia-goc"></tbody>
         </table>
       </div>
+    </div>
+
+    <div class="the">
+      <h2 class="the__tieu-de">Biểu giá nước đang áp dụng</h2>
+      <p class="ghi-chu" id="mo-ta-bieu-gia-nuoc"></p>
+      <div class="bao-bang">
+        <table class="bang">
+          <thead>
+            <tr>
+              <th>Bậc</th>
+              <th>Khung cho 1 người (m³/tháng)</th>
+              <th class="phai">Đơn giá (đ/m³)</th>
+            </tr>
+          </thead>
+          <tbody id="bang-bieu-gia-nuoc-goc"></tbody>
+        </table>
+      </div>
+      <p class="ghi-chu" id="can-cu-nuoc-tab"></p>
     </div>
 
     <div class="the">
@@ -263,6 +446,10 @@
         khai báo theo một trong ba phương thức thu (lũy tiến theo định mức, giá phẳng, khoán đầu
         người). Hỗ trợ thêm một tỉnh là thêm dữ liệu, không phải viết thêm code.
       </p>
+      <p>
+        Danh sách cách thu của chủ trọ cũng nằm trong cấu hình. Nhờ vậy khi gặp một kiểu thu
+        mới ở thực tế, chỉ cần thêm một phần tử JSON là giao diện tự sinh thêm lựa chọn.
+      </p>
     </div>
   </section>
 
@@ -273,7 +460,7 @@
         <div>
           <h2 class="the__tieu-de">Kiểm thử lõi tính toán</h2>
           <p class="ghi-chu">
-            Cùng bộ test chạy được bằng dòng lệnh: <code>node tests/pricing-engine.test.js</code>
+            Cùng bộ test chạy được bằng dòng lệnh: <code>npm test</code>
           </p>
         </div>
         <button type="button" class="nut nut--chinh" id="nut-chay-test">Chạy kiểm thử</button>
@@ -291,10 +478,21 @@
   </div>
 </footer>
 
-<!-- Thứ tự nạp: lõi tính toán → diễn giải → dữ liệu test → điều khiển giao diện -->
-<script src="src/pricing-engine.js?v=0.2.0"></script>
-<script src="src/explain.js?v=0.2.0"></script>
-<script src="tests/test-cases.js?v=0.2.0"></script>
-<script src="src/app.js?v=0.2.0"></script>
+<!--
+  Thứ tự nạp:
+    1. lõi tính điện (giữ nguyên, không sửa)
+    2. diễn giải điện (giữ nguyên)
+    3. lõi tính nước (mới, không phụ thuộc DOM)
+    4. dữ liệu test
+    5. điều khiển giao diện điện (giữ nguyên)
+    6. tầng hợp nhất: ô nhập mới + phần nước + gộp Tổng quan (mới)
+  hop-nhat.js PHẢI nạp sau app.js để ghi đè được bảng Tổng quan.
+-->
+<script src="src/pricing-engine.js?v=0.3.0"></script>
+<script src="src/explain.js?v=0.3.0"></script>
+<script src="src/water-engine.js?v=0.3.0"></script>
+<script src="tests/test-cases.js?v=0.3.0"></script>
+<script src="src/app.js?v=0.3.0"></script>
+<script src="src/hop-nhat.js?v=0.3.0"></script>
 </body>
 </html>

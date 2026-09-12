@@ -12,11 +12,12 @@ mỗi lần chính sách đổi sẽ phải sửa code, biên dịch lại, dễ
 - Người không biết lập trình (ví dụ chủ trọ, sinh viên khác) vẫn có thể cập nhật giá đúng.
 - Dễ viết test case với nhiều bộ số liệu khác nhau (ví dụ giả lập biểu giá cũ/mới).
 
-## 2. Vì sao `pricing-engine.js` không đụng vào DOM?
+## 2. Vì sao các lõi tính toán không đụng vào DOM?
 
-Để lõi nghiệp vụ có thể:
-- Chạy độc lập trong Node.js để viết test (`tests/pricing-engine.test.js`) mà không cần trình duyệt.
-- Tái sử dụng cho các bài toán tương tự (tiền nước, phí dịch vụ) chỉ bằng cách đổi bộ config.
+`pricing-engine.js` xử lý điện, còn `water-engine.js` xử lý nước. Cả hai lõi đều:
+
+- Chạy độc lập trong Node.js để viết test mà không cần trình duyệt.
+- Nhận đầu vào thuần và trả về số tiền, các dòng phân bổ và diễn giải.
 - Không bị lẫn lỗi giao diện với lỗi công thức tính toán khi debug.
 
 ## 3. Vì sao dùng phép tính lũy tiến theo "ranh giới liên tục" thay vì [từ, đến] rời rạc?
@@ -33,4 +34,7 @@ nhét thêm điều kiện `if` chằng chịt vào hàm lũy tiến vốn đã 
 
 ## 5. Giới hạn đã biết / việc chưa làm
 
-- Giá nước một số tỉnh dùng số liệu mẫu, cần đối chiếu trước khi dùng thực tế.
+- Bản MVP có biểu giá tham chiếu sẵn cho TP.HCM; địa phương khác dùng chế độ nhập đơn giá từ hóa đơn và cần bổ sung cấu hình đã kiểm chứng.
+- Chưa hỗ trợ phân bổ một đồng hồ tổng cho nhiều phòng, tiền nợ kỳ trước, chiết khấu hoặc phí dịch vụ ngoài điện/nước.
+- Nút in dùng chức năng in của trình duyệt; chưa tạo tệp hóa đơn có chữ ký số.
+- Người bảo trì phải kiểm chứng và thêm phiên bản mới vào `config/` mỗi khi biểu giá, thuế hoặc quy định địa phương thay đổi.

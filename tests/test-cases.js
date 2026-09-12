@@ -37,6 +37,30 @@ function taoDanhSachTest(Engine, cfg) {
   const NGAY = "2026-09-01";
 
   return [
+    // ---------- Chỉ số công tơ ----------
+    {
+      nhom: "Chỉ số công tơ",
+      ten: "Cuối kỳ − đầu kỳ = sản lượng tiêu thụ",
+      chay: () => bang(Engine.tinhSanLuongTuChiSo(1520, 1705), 185),
+    },
+    {
+      nhom: "Chỉ số công tơ",
+      ten: "Chỉ số cuối nhỏ hơn đầu phải báo lỗi",
+      chay: () =>
+        nemLoi(() => Engine.tinhSanLuongTuChiSo(1705, 1520), "Cuối < đầu"),
+    },
+    {
+      nhom: "Chỉ số công tơ",
+      ten: "Chỉ số âm phải báo lỗi",
+      chay: () =>
+        nemLoi(() => Engine.tinhSanLuongTuChiSo(-10, 50), "Chỉ số âm"),
+    },
+    {
+      nhom: "Chỉ số công tơ",
+      ten: "Hai chỉ số bằng nhau cho sản lượng 0",
+      chay: () => bang(Engine.tinhSanLuongTuChiSo(1000, 1000), 0),
+    },
+
     // ---------- Định mức theo số người ----------
     {
       nhom: "Định mức",
@@ -266,76 +290,21 @@ function taoDanhSachTest(Engine, cfg) {
       },
     },
 
-    // ---------- Nước ----------
-    {
-      nhom: "Nước",
-      ten: "Trong định mức: tính toàn bộ theo giá bậc 1",
-      chay: () => {
-        const dp = nuoc.diaPhuong.find((d) => d.ma === "HCM");
-        const dinhMuc = dp.dinhMucM3NguoiThang * 3;
-        const kq = Engine.tinhTienNuoc(
-          { soM3: dinhMuc, soNguoiThue: 3, maDiaPhuong: "HCM", ngayTinh: NGAY },
-          nuoc,
-          vat
-        );
-        bang(
-          kq.tienTruocThue,
-          dinhMuc * dp.bacThang[0].donGia,
-          "Tiền nước trước thuế"
-        );
-      },
-    },
-    {
-      nhom: "Nước",
-      ten: "Vượt định mức: phần vượt tính giá bậc cao hơn, có cộng dồn",
-      chay: () => {
-        const dp = nuoc.diaPhuong.find((d) => d.ma === "HCM");
-        const dinhMuc = dp.dinhMucM3NguoiThang * 3; // 12 m³
-        const kq = Engine.tinhTienNuoc(
-          {
-            soM3: dinhMuc + 2,
-            soNguoiThue: 3,
-            maDiaPhuong: "HCM",
-            ngayTinh: NGAY,
-          },
-          nuoc,
-          vat
-        );
-        const dung =
-          dinhMuc * dp.bacThang[0].donGia + 2 * dp.bacThang[1].donGia;
-        bang(kq.tienTruocThue, dung, "Tiền nước trước thuế");
-      },
-    },
-    {
-      nhom: "Nước",
-      ten: "Có cộng phí bảo vệ môi trường và thuế GTGT nước sạch",
-      chay: () => {
-        const kq = Engine.tinhTienNuoc(
-          { soM3: 12, soNguoiThue: 3, maDiaPhuong: "HCM", ngayTinh: NGAY },
-          nuoc,
-          vat
-        );
-        bang(
-          kq.tongThanhToan,
-          kq.tienTruocThue + kq.tienThue + kq.phiMoiTruong,
-          "Tổng tiền nước"
-        );
-        if (kq.phiMoiTruong <= 0) {
-          throw new Error("Phí bảo vệ môi trường không được tính");
-        }
-      },
-    },
+    // Các ca nước theo cấu hình địa phương hiện hành nằm ở
+    // tests/water-engine.test.js. Các ca dưới đây giữ lại để kiểm tra
+    // hàm biểu thu nước tự nhập trong lõi dùng chung.
     {
       nhom: "Nước",
       ten: "Phương thức khoán đầu người không phụ thuộc số m³",
       chay: () => {
+        const bt = { phuongThuc: "KHOAN_DAU_NGUOI", khoanMoiNguoiThang: 100000 };
         const a = Engine.tinhTienNuoc(
-          { soM3: 5, soNguoiThue: 3, maDiaPhuong: "KHOAN", ngayTinh: NGAY },
+          { soM3: 5, soNguoiThue: 3, bieuThu: bt, ngayTinh: NGAY },
           nuoc,
           vat
         );
         const b = Engine.tinhTienNuoc(
-          { soM3: 50, soNguoiThue: 3, maDiaPhuong: "KHOAN", ngayTinh: NGAY },
+          { soM3: 50, soNguoiThue: 3, bieuThu: bt, ngayTinh: NGAY },
           nuoc,
           vat
         );
@@ -360,6 +329,67 @@ function taoDanhSachTest(Engine, cfg) {
             ),
           "Mã địa phương sai"
         ),
+    },
+
+    {
+      nhom: "Nước tự nhập",
+      ten: "Giá phẳng tự nhập: m³ × đơn giá",
+      chay: () => {
+        const kq = Engine.tinhTienNuoc(
+          { soM3: 10, soNguoiThue: 2, bieuThu: { phuongThuc: "GIA_PHANG", donGiaPhang: 15000 } },
+          nuoc, vat
+        );
+        bang(kq.tienTruocThue, 150000, "Tiền nước trước thuế");
+      },
+    },
+    {
+      nhom: "Nước tự nhập",
+      ten: "Bậc thang tự nhập: phần vượt định mức tính giá cao hơn",
+      chay: () => {
+        const kq = Engine.tinhTienNuoc(
+          { soM3: 14, soNguoiThue: 3, bieuThu: { phuongThuc: "BAC_THANG_DINH_MUC", dinhMucM3NguoiThang: 4, bacThang: [{ nhanDinhMuc: 1.0, donGia: 6000 }, { nhanDinhMuc: null, donGia: 12000 }] } },
+          nuoc, vat
+        );
+        bang(kq.tienTruocThue, 12 * 6000 + 2 * 12000, "Tiền nước bậc thang");
+      },
+    },
+    {
+      nhom: "Nước tự nhập",
+      ten: "Khoán tự nhập không phụ thuộc m³",
+      chay: () => {
+        const a = Engine.tinhTienNuoc({ soM3: 5, soNguoiThue: 3, bieuThu: { phuongThuc: "KHOAN_DAU_NGUOI", khoanMoiNguoiThang: 80000 } }, nuoc, vat);
+        bang(a.tienTruocThue, 240000, "Tiền khoán");
+      },
+    },
+    {
+      nhom: "Nước tự nhập",
+      ten: "Biểu thu thiếu phuongThuc phải báo lỗi",
+      chay: () => nemLoi(() => Engine.tinhTienNuoc({ soM3: 10, soNguoiThue: 2, bieuThu: {} }, nuoc, vat), "Thiếu phương thức"),
+    },
+
+    {
+      nhom: "Khung giá nước",
+      ten: "Tính được đơn giá bình quân để so với khung giá nhà nước",
+      chay: () => {
+        const kq = Engine.tinhTienNuoc(
+          { soM3: 10, soNguoiThue: 2, bieuThu: { phuongThuc: "GIA_PHANG", donGiaPhang: 25000 } },
+          nuoc, vat
+        );
+        // Đơn giá bình quân (gồm thuế) phải > 0 và phản ánh mức thu cao
+        if (!(kq.donGiaBinhQuan > 0)) throw new Error("Chưa tính đơn giá bình quân nước");
+        if (kq.donGiaBinhQuan < 25000) throw new Error("Đơn giá bình quân phải >= đơn giá gốc vì có thêm thuế/phí");
+      },
+    },
+    {
+      nhom: "Khung giá nước",
+      ten: "Khoán đầu người không có đơn giá bình quân theo m³",
+      chay: () => {
+        const kq = Engine.tinhTienNuoc(
+          { soM3: 0, soNguoiThue: 3, bieuThu: { phuongThuc: "KHOAN_DAU_NGUOI", khoanMoiNguoiThang: 100000 } },
+          nuoc, vat
+        );
+        bang(kq.donGiaBinhQuan, null, "Đơn giá bình quân khi khoán");
+      },
     },
 
     // ---------- Đối chiếu mức thu ----------

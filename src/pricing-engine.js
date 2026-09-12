@@ -30,6 +30,36 @@ function lamTron(so) {
 }
 
 /**
+ * Tính sản lượng tiêu thụ từ chỉ số công tơ đầu kỳ và cuối kỳ.
+ * Người thuê trọ thường chỉ nhìn thấy hai con số trên đồng hồ, không
+ * tự tính hiệu số. Hàm này giúp họ nhập đúng dữ liệu mình có.
+ *
+ * @param {number} chiSoDau - chỉ số đầu kỳ (số nhỏ hơn)
+ * @param {number} chiSoCuoi - chỉ số cuối kỳ (số lớn hơn)
+ * @returns {number} sản lượng tiêu thụ
+ */
+function tinhSanLuongTuChiSo(chiSoDau, chiSoCuoi) {
+  if (
+    typeof chiSoDau !== "number" ||
+    typeof chiSoCuoi !== "number" ||
+    Number.isNaN(chiSoDau) ||
+    Number.isNaN(chiSoCuoi)
+  ) {
+    throw new Error("Chỉ số công tơ đầu kỳ và cuối kỳ phải là số.");
+  }
+  if (chiSoDau < 0 || chiSoCuoi < 0) {
+    throw new Error("Chỉ số công tơ không được âm.");
+  }
+  if (chiSoCuoi < chiSoDau) {
+    throw new Error(
+      "Chỉ số cuối kỳ phải lớn hơn hoặc bằng chỉ số đầu kỳ. " +
+        "Hãy kiểm tra lại: có thể bạn đã nhập nhầm thứ tự hai ô."
+    );
+  }
+  return chiSoCuoi - chiSoDau;
+}
+
+/**
  * Chọn phần tử có hiệu lực tại một thời điểm, từ một mảng các phiên bản
  * có 'hieuLucTu' / 'hieuLucDen'. Dùng cho cả biểu giá điện và thuế GTGT.
  * Nhờ hàm này, đổi ngày tính tiền sang 2027 là thuế GTGT tự nhảy về mức
@@ -223,28 +253,111 @@ function tinhTienDien(input, configBieuGia, configVat) {
 // ------------------------------------------------------------------
 
 /**
- * Tính tiền nước. Hỗ trợ ba phương thức thu khai báo trong config:
+ * Chuẩn hóa thông số biểu thu do người dùng TỰ NHẬP về đúng định dạng mà
+ * hàm tính bên dưới cần. Giúp phần tính toán không phải phân biệt dữ liệu
+ * đến từ config hay từ người dùng.
+ *
+ * @param {Object} bt - biểu thu người dùng nhập, tùy phương thức:
+ *   { phuongThuc: "BAC_THANG_DINH_MUC", ten, dinhMucM3NguoiThang, bacThang:[{tenBac,nhanDinhMuc,donGia}], phiBaoVeMoiTruong }
+ *   { phuongThuc: "GIA_PHANG", ten, donGiaPhang, phiBaoVeMoiTruong }
+ *   { phuongThuc: "KHOAN_DAU_NGUOI", ten, khoanMoiNguoiThang }
+ */
+function chuanHoaBieuThu(bt) {
+  if (!bt || !bt.phuongThuc) {
+    throw new Error("Thiếu 'phuongThuc' trong biểu thu nước tự nhập.");
+  }
+  const dp = {
+    ma: "TU_NHAP",
+    ten: bt.ten || "Chủ trọ thu (tự nhập)",
+    canCu: bt.canCu || "Người dùng nhập theo cách chủ trọ đang thu",
+    phuongThuc: bt.phuongThuc,
+    phiBaoVeMoiTruong: Number(bt.phiBaoVeMoiTruong) || 0,
+  };
+
+  if (bt.phuongThuc === "BAC_THANG_DINH_MUC") {
+    dp.dinhMucM3NguoiThang = Number(bt.dinhMucM3NguoiThang);
+    if (!(dp.dinhMucM3NguoiThang > 0)) {
+      throw new Error("Định mức m³/người/tháng phải là số dương.");
+    }
+    if (!Array.isArray(bt.bacThang) || bt.bacThang.length === 0) {
+      throw new Error("Cần ít nhất một bậc giá nước.");
+    }
+    dp.bacThang = bt.bacThang.map((b, i) => ({
+      bac: i + 1,
+      tenBac: b.tenBac || `Bậc ${i + 1}`,
+      nhanDinhMuc:
+        b.nhanDinhMuc === null || b.nhanDinhMuc === undefined || b.nhanDinhMuc === ""
+          ? null
+          : Number(b.nhanDinhMuc),
+      donGia: Number(b.donGia),
+    }));
+  } else if (bt.phuongThuc === "BAC_THANG_M3") {
+    // Bậc thang theo tổng m³ trên đồng hồ, KHÔNG nhân số người (kiểu Hà Nội).
+    if (!Array.isArray(bt.bacThang) || bt.bacThang.length === 0) {
+      throw new Error("Cần ít nhất một bậc giá nước.");
+    }
+    dp.bacThang = bt.bacThang.map((b, i) => ({
+      bac: i + 1,
+      tenBac: b.tenBac || `Bậc ${i + 1}`,
+      denM3:
+        b.denM3 === null || b.denM3 === undefined || b.denM3 === ""
+          ? null
+          : Number(b.denM3),
+      donGia: Number(b.donGia),
+    }));
+  } else if (bt.phuongThuc === "GIA_PHANG") {
+    dp.donGiaPhang = Number(bt.donGiaPhang);
+    if (!(dp.donGiaPhang >= 0)) {
+      throw new Error("Đơn giá nước phải là số không âm.");
+    }
+  } else if (bt.phuongThuc === "KHOAN_DAU_NGUOI") {
+    dp.khoanMoiNguoiThang = Number(bt.khoanMoiNguoiThang);
+    if (!(dp.khoanMoiNguoiThang >= 0)) {
+      throw new Error("Tiền khoán mỗi người phải là số không âm.");
+    }
+  } else {
+    throw new Error(`Phương thức '${bt.phuongThuc}' không hợp lệ.`);
+  }
+  return dp;
+}
+
+/**
+ * Tính tiền nước. Hỗ trợ ba phương thức thu:
  *  - BAC_THANG_DINH_MUC: lũy tiến theo định mức m³/người (đúng quy định)
  *  - GIA_PHANG:          một đơn giá duy nhất cho mọi m³
  *  - KHOAN_DAU_NGUOI:    khoán tiền cố định mỗi người mỗi tháng
  *
+ * Thông số biểu thu có thể lấy từ HAI nguồn:
+ *  (a) input.bieuThu — do người dùng TỰ NHẬP cách chủ trọ đang thu. Ưu tiên
+ *      nguồn này, vì mỗi nhà trọ thu một kiểu và giá nước khác nhau theo tỉnh,
+ *      để người dùng tự nhập là chính xác và dễ cập nhật nhất.
+ *  (b) input.maDiaPhuong — tra từ config/water-rates.json (dùng khi muốn có
+ *      sẵn biểu giá tham chiếu của một địa phương).
+ *
  * @param {Object} input
  * @param {number} input.soM3
  * @param {number} input.soNguoiThue
- * @param {string} input.maDiaPhuong  - khớp với 'ma' trong water-rates.json
+ * @param {Object} [input.bieuThu]     - thông số người dùng tự nhập (ưu tiên)
+ * @param {string} [input.maDiaPhuong] - hoặc mã địa phương trong config
  * @param {string} [input.ngayTinh]
- * @param {Object} configNuoc         - config/water-rates.json
- * @param {Object} configVat          - config/vat.json
+ * @param {Object} configNuoc          - config/water-rates.json
+ * @param {Object} configVat           - config/vat.json
  */
 function tinhTienNuoc(input, configNuoc, configVat) {
-  const { soM3, soNguoiThue, maDiaPhuong, ngayTinh } = input;
+  const { soM3, soNguoiThue, bieuThu, maDiaPhuong, ngayTinh } = input;
 
-  const dp = configNuoc.diaPhuong.find((d) => d.ma === maDiaPhuong);
-  if (!dp) {
-    throw new Error(
-      `Không tìm thấy địa phương có mã '${maDiaPhuong}' trong config/water-rates.json. ` +
-        `Hãy thêm một phần tử mới vào mảng 'diaPhuong'.`
-    );
+  // Nguồn biểu thu: ưu tiên do người dùng tự nhập; nếu không có thì tra config.
+  let dp;
+  if (bieuThu) {
+    dp = chuanHoaBieuThu(bieuThu);
+  } else {
+    dp = configNuoc.diaPhuong.find((d) => d.ma === maDiaPhuong);
+    if (!dp) {
+      throw new Error(
+        `Không có thông số biểu thu nước: thiếu cả input.bieuThu (tự nhập) lẫn ` +
+          `mã địa phương '${maDiaPhuong}' hợp lệ trong config.`
+      );
+    }
   }
 
   const thue = chonTheoNgay(configVat.nuocSachSinhHoat, ngayTinh);
@@ -275,6 +388,26 @@ function tinhTienNuoc(input, configNuoc, configVat) {
       return kq;
     });
 
+    const kq = tinhLuyTien(soM3, cacBac);
+    tienTruocThue = kq.tongTien;
+    chiTiet = kq.chiTiet;
+  } else if (dp.phuongThuc === "BAC_THANG_M3") {
+    // Bậc thang theo tổng m³ trên đồng hồ (kiểu Hà Nội), ngưỡng tuyệt đối.
+    if (typeof soM3 !== "number" || soM3 < 0) {
+      throw new Error("Lượng nước (soM3) phải là một số không âm.");
+    }
+    let bienTruoc = 0;
+    const cacBac = dp.bacThang.map((b) => {
+      const kq = {
+        bac: b.bac,
+        tenBac: b.tenBac,
+        tuMuc: bienTruoc,
+        denMuc: b.denM3,
+        donGia: b.donGia,
+      };
+      if (b.denM3 !== null) bienTruoc = b.denM3;
+      return kq;
+    });
     const kq = tinhLuyTien(soM3, cacBac);
     tienTruocThue = kq.tongTien;
     chiTiet = kq.chiTiet;
@@ -333,6 +466,10 @@ function tinhTienNuoc(input, configNuoc, configVat) {
     thueSuat: thue.thueSuat,
     tienThue,
     tongThanhToan,
+    donGiaBinhQuan:
+      dp.phuongThuc !== "KHOAN_DAU_NGUOI" && soM3 > 0
+        ? lamTron(tongThanhToan / soM3)
+        : null,
     chiTiet,
   };
 }
@@ -376,6 +513,7 @@ function doiChieuMucThu(soTienThucThu, soTienHopPhap, configPhapLy) {
 
 const api = {
   chonTheoNgay,
+  tinhSanLuongTuChiSo,
   tinhLuyTien,
   tinhDinhMuc,
   apDungDinhMuc,

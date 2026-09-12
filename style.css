@@ -477,3 +477,163 @@ input:focus, select:focus {
   .luoi { grid-template-columns: 1fr; }
   .the { box-shadow: none; border-color: #ccc; page-break-inside: avoid; }
 }
+
+/* ==================================================================
+   v0.3.0 — BỔ SUNG CHO PHẦN NƯỚC LỒNG TRONG CÙNG FORM VỚI PHẦN ĐIỆN
+   Chỉ dùng lại các biến đã khai báo ở :root, không thêm biến mới.
+   ================================================================== */
+
+/* Câu mở đầu cột nhập liệu */
+.ghi-chu--mo-dau {
+  margin-top: -4px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--mau-vien);
+}
+
+/* Hai phân khu Điện / Nước trong cùng một form */
+.phan-nhap {
+  margin: 22px 0 0;
+  padding: 16px 0 0;
+  border-top: 2px solid var(--mau-vien);
+}
+
+.phan-nhap__tieu-de {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.phan-nhap--dien {
+  border-top-color: var(--mau-chinh);
+}
+
+.phan-nhap--dien .phan-nhap__tieu-de {
+  color: var(--mau-chinh);
+}
+
+.phan-nhap--nuoc {
+  border-top-color: var(--mau-nuoc);
+}
+
+.phan-nhap--nuoc .phan-nhap__tieu-de {
+  color: var(--mau-nuoc);
+}
+
+/* Ô tích "Tính thêm" nằm bên phải tiêu đề phân khu */
+.cong-tac--phai {
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--mau-chu-nhat);
+}
+
+/* Hai lựa chọn "biết số đo" / "đọc chỉ số đồng hồ" */
+.dai-chon-nho {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.chon-nho {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--mau-vien);
+  border-radius: var(--ban-kinh-nho);
+  background: var(--mau-trang);
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.chon-nho input {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.phan-nhap--dien .chon-nho:has(input:checked) {
+  border-color: var(--mau-chinh);
+  background: var(--mau-chinh-nhat);
+  color: var(--mau-chinh);
+  font-weight: 600;
+}
+
+.phan-nhap--nuoc .chon-nho:has(input:checked) {
+  border-color: var(--mau-nuoc);
+  background: #ecfeff;
+  color: var(--mau-nuoc);
+  font-weight: 600;
+}
+
+.chon-nho:focus-within {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Đơn vị đứng cạnh ô nhập, và mũi nối giữa hai chỉ số */
+.don-vi,
+.dau-noi {
+  flex: 0 0 auto;
+  align-self: center;
+  color: var(--mau-chu-nhat);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Ô nhập phụ thuộc lựa chọn ngay phía trên */
+.nhom--lien {
+  margin: 10px 0 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--mau-vien);
+}
+
+/* Khối giữ lại cho app.js đọc — không bao giờ hiển thị */
+.o-cu-giu-lai {
+  display: none !important;
+}
+
+/* Bậc không bị tính: làm mờ để thấy rõ phần được áp dụng */
+.hang-khong-ap-dung {
+  color: var(--mau-chu-nhat);
+  opacity: 0.5;
+}
+
+.hang-tong {
+  font-weight: 700;
+  background: var(--mau-chinh-nhat);
+}
+
+/* Thẻ kết quả nước dùng màu nhấn riêng để phân biệt với thẻ điện */
+#the-nuoc .the__tieu-de {
+  color: var(--mau-nuoc);
+}
+
+#the-nuoc .o-so--nhan-manh {
+  border-color: var(--mau-nuoc);
+}
+
+#the-nuoc .luoi-so {
+  margin-bottom: 14px;
+}
+
+#dai-chi-tiet-nuoc:not(:empty) {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--mau-vien);
+  font-size: 0.85rem;
+  color: var(--mau-chu-nhat);
+}
+
+@media print {
+  .dai-chon-nho,
+  #o-thong-so-dien,
+  #o-thong-so-nuoc,
+  .hang-khong-ap-dung { display: none; }
+}

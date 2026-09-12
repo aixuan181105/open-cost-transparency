@@ -1,57 +1,172 @@
 {
-  "_doc": "CẤU HÌNH GIÁ NƯỚC SINH HOẠT theo từng địa phương. Giá nước do từng tỉnh/thành ban hành nên khác nhau. Muốn hỗ trợ thêm một tỉnh: THÊM MỘT PHẦN TỬ vào mảng 'diaPhuong' bên dưới, không cần sửa code.",
-  "_canhBao": "Các đơn giá dưới đây là số liệu MẪU để dựng khung. Bắt buộc đối chiếu với quyết định giá nước của địa phương trước khi nộp bài.",
-
-  "_schema": {
-    "phuongThuc": "Một trong ba giá trị: BAC_THANG_DINH_MUC (lũy tiến theo định mức m³/người), GIA_PHANG (một đơn giá duy nhất cho mọi m³), KHOAN_DAU_NGUOI (khoán một số tiền cố định mỗi người mỗi tháng).",
-    "dinhMucM3NguoiThang": "Chỉ dùng cho BAC_THANG_DINH_MUC. Số m³ được hưởng định mức mỗi người mỗi tháng.",
-    "bacThang[].nhanDinhMuc": "Ranh giới trên của bậc, tính theo SỐ LẦN tổng định mức. Ví dụ 1.0 = hết định mức, 1.5 = tới 1,5 lần định mức, null = không giới hạn."
-  },
-
+  "phienBanCauHinh": "2.0.0",
+  "capNhatNgay": "2026-09-12",
+  "ghiChu": "Mỗi địa phương là một phần tử. Thêm tỉnh/thành = thêm dữ liệu, không sửa code. Đơn giá là giá nước sạch CHƯA gồm thuế GTGT và chưa gồm giá dịch vụ thoát nước.",
+  "diaPhuongMacDinh": "hcm",
   "diaPhuong": [
     {
-      "ma": "HCM",
-      "ten": "TP. Hồ Chí Minh",
-      "phuongThuc": "BAC_THANG_DINH_MUC",
-      "canCu": "Số liệu mẫu, cần cập nhật theo quyết định giá nước địa phương",
-      "dinhMucM3NguoiThang": 4,
-      "bacThang": [
-        { "bac": 1, "tenBac": "Trong định mức",            "nhanDinhMuc": 1.0,  "donGia": 6700 },
-        { "bac": 2, "tenBac": "Trên định mức đến 1,5 lần", "nhanDinhMuc": 1.5,  "donGia": 12900 },
-        { "bac": 3, "tenBac": "Trên 1,5 lần định mức",     "nhanDinhMuc": null, "donGia": 14400 }
+      "ma": "hcm",
+      "ten": "TP. Hồ Chí Minh (SAWACO và các công ty thành viên)",
+      "hieuLucTu": "2026-01-01",
+      "phuongThuc": "luyTienTheoDinhMuc",
+      "donViDinhMuc": "m³/người/tháng",
+      "bac": [
+        {
+          "ten": "Bậc 1",
+          "denM3MoiNguoi": 4,
+          "donGia": 6700,
+          "moTa": "Trong định mức 4 m³/người/tháng"
+        },
+        {
+          "ten": "Bậc 2",
+          "denM3MoiNguoi": 6,
+          "donGia": 12900,
+          "moTa": "Trên 4 đến 6 m³/người/tháng"
+        },
+        {
+          "ten": "Bậc 3",
+          "denM3MoiNguoi": null,
+          "donGia": 14400,
+          "moTa": "Trên 6 m³/người/tháng"
+        }
       ],
-      "phiBaoVeMoiTruong": 0.1,
-      "ghiChuPhi": "Phí bảo vệ môi trường đối với nước thải sinh hoạt, tính theo tỷ lệ trên tiền nước trước thuế."
-    },
-    {
-      "ma": "HN",
-      "ten": "Hà Nội",
-      "phuongThuc": "BAC_THANG_DINH_MUC",
-      "canCu": "Số liệu mẫu, cần cập nhật theo quyết định giá nước địa phương",
-      "dinhMucM3NguoiThang": 10,
-      "bacThang": [
-        { "bac": 1, "tenBac": "Đến 10 m³/người",       "nhanDinhMuc": 1.0,  "donGia": 8500 },
-        { "bac": 2, "tenBac": "Trên 10 đến 20 m³",     "nhanDinhMuc": 2.0,  "donGia": 9900 },
-        { "bac": 3, "tenBac": "Trên 20 đến 30 m³",     "nhanDinhMuc": 3.0,  "donGia": 16000 },
-        { "bac": 4, "tenBac": "Trên 30 m³",            "nhanDinhMuc": null, "donGia": 27000 }
+      "vatNuocSach": 0.05,
+      "phuPhi": [
+        {
+          "ma": "thoatNuoc",
+          "ten": "Giá dịch vụ thoát nước và xử lý nước thải",
+          "tyLeTrenTienNuoc": 0.3,
+          "vat": 0.08,
+          "canCu": "Quyết định 17/2021/QĐ-UBND (lộ trình 2022–2025, mức 30% giữ nguyên cho năm 2026)"
+        }
       ],
-      "phiBaoVeMoiTruong": 0.1
+      "khiChuaCoDinhMuc": {
+        "cachTinh": "apDonGiaMotBac",
+        "bacApDung": 3,
+        "canCu": "Hộ/thuê bao chưa được cấp định mức nhân khẩu thì không được hưởng đơn giá bậc thấp.",
+        "canKiemChung": true
+      },
+      "canCu": [
+        "Quyết định 25/2019/QĐ-UBND ngày 24/10/2019 của UBND TP.HCM về giá nước sạch sinh hoạt",
+        "Quyết định 02/2022/QĐ-UBND ngày 12/01/2022 sửa đổi QĐ 25/2019: sinh viên, người lao động thuê nhà để ở được cấp định mức nước căn cứ giấy xác nhận tạm trú",
+        "Quyết định 17/2021/QĐ-UBND ngày 01/6/2021 về giá dịch vụ thoát nước và xử lý nước thải",
+        "Quyết định 23/2026/QĐ-UBND ngày 24/4/2026 về quản lý, hỗ trợ nhà ở riêng lẻ cho thuê để ở: người thuê có đăng ký cư trú được áp dụng đơn giá, định mức nước theo loại hình không kinh doanh",
+        "Thông báo 3698/TB-CNBT-KDDVKH năm 2025: đơn giá nước sạch và dịch vụ thoát nước từ 01/01/2026 đến 31/12/2026 không đổi so với 2025"
+      ],
+      "ghiChuNguoiDung": "TP.HCM tính định mức 4 m³/người/tháng. Người thuê trọ có giấy xác nhận tạm trú tại phòng trọ được cấp định mức như nhân khẩu thường trú."
     },
     {
-      "ma": "KHAC_PHANG",
-      "ten": "Địa phương khác — chủ trọ thu giá phẳng",
-      "phuongThuc": "GIA_PHANG",
-      "canCu": "Không theo biểu giá địa phương, dùng để đối chiếu mức thu thực tế của chủ trọ.",
-      "donGiaPhang": 20000,
-      "phiBaoVeMoiTruong": 0
-    },
-    {
-      "ma": "KHOAN",
-      "ten": "Chủ trọ khoán theo đầu người",
-      "phuongThuc": "KHOAN_DAU_NGUOI",
-      "canCu": "Hình thức khoán phổ biến tại cơ sở cho thuê, không căn cứ theo sản lượng thực tế.",
-      "khoanMoiNguoiThang": 100000,
-      "phiBaoVeMoiTruong": 0
+      "ma": "tu-nhap",
+      "ten": "Tỉnh/thành khác — tôi tự nhập đơn giá trên hóa đơn",
+      "hieuLucTu": "1900-01-01",
+      "phuongThuc": "nguoiDungNhapDonGia",
+      "vatNuocSach": 0.05,
+      "phuPhi": [
+        {
+          "ma": "thoatNuoc",
+          "ten": "Giá dịch vụ thoát nước / phí bảo vệ môi trường",
+          "tyLeTrenTienNuoc": 0.1,
+          "vat": 0.08,
+          "canCu": "Mức tối thiểu 10% theo Nghị định 53/2020/NĐ-CP. Hãy sửa lại theo hóa đơn của địa phương."
+        }
+      ],
+      "canCu": [
+        "Thông tư 44/2021/TT-BTC: khung giá nước sạch sinh hoạt; UBND cấp tỉnh quyết định giá bán cụ thể",
+        "Nghị định 117/2007/NĐ-CP về sản xuất, cung cấp và tiêu thụ nước sạch"
+      ],
+      "ghiChuNguoiDung": "Chưa có biểu giá bậc thang cho địa phương này. Hãy lấy đơn giá ghi trên hóa đơn nước gần nhất để đối chiếu."
     }
-  ]
+  ],
+  "cachChuTroThu": [
+    {
+      "ma": "theoM3",
+      "ten": "Thu theo m³ với một đơn giá cố định",
+      "nhanThongSo": "Đơn giá chủ trọ thu",
+      "donVi": "đ/m³",
+      "buocNhap": 1000,
+      "giaTriGoiY": 20000,
+      "canSanLuong": true
+    },
+    {
+      "ma": "dauNguoi",
+      "ten": "Khoán theo đầu người",
+      "nhanThongSo": "Số tiền mỗi người một tháng",
+      "donVi": "đ/người",
+      "buocNhap": 10000,
+      "giaTriGoiY": 100000,
+      "canSanLuong": false
+    },
+    {
+      "ma": "caPhong",
+      "ten": "Khoán cả phòng, không đo đồng hồ",
+      "nhanThongSo": "Số tiền cả phòng một tháng",
+      "donVi": "đ/tháng",
+      "buocNhap": 10000,
+      "giaTriGoiY": 200000,
+      "canSanLuong": false
+    },
+    {
+      "ma": "theoHoaDon",
+      "ten": "Chia lại đúng theo hóa đơn nước",
+      "khongCanThongSo": true,
+      "canSanLuong": true
+    },
+    {
+      "ma": "tongTien",
+      "ten": "Tôi chỉ biết tổng tiền ghi trên giấy thu",
+      "nhanThongSo": "Tổng tiền nước kỳ này",
+      "donVi": "đ",
+      "buocNhap": 1000,
+      "giaTriGoiY": 240000,
+      "canSanLuong": false
+    }
+  ],
+  "nguongCoiLaPhuHop": {
+    "tyLe": 0.02,
+    "soTienToiThieu": 2000,
+    "ghiChu": "Lệch dưới 2% hoặc dưới 2.000đ thì coi như do làm tròn, không phải thu sai."
+  },
+  "canCuKhiThuSai": {
+    "nuoc": "Giá nước sạch do UBND cấp tỉnh quyết định (Nghị định 117/2007/NĐ-CP, Thông tư 44/2021/TT-BTC). Chưa có chế tài xử phạt hành chính riêng cho việc chủ trọ thu tiền nước cao hơn giá quy định như với tiền điện. Người thuê có thể yêu cầu chủ trọ giải trình hóa đơn gốc, đề nghị đơn vị cấp nước cấp định mức theo giấy xác nhận tạm trú, hoặc phản ánh tới UBND phường/xã.",
+    "dien": "Thu tiền điện cao hơn giá quy định có thể bị phạt 20–30 triệu đồng và buộc nộp lại số lợi bất hợp pháp (khoản 7 Điều 12 Nghị định 134/2013/NĐ-CP, sửa đổi bởi Nghị định 17/2022/NĐ-CP)."
+  },
+  "cachChuTroThuDien": [
+    {
+      "ma": "theoKwh",
+      "ten": "Thu theo kWh với một đơn giá cố định",
+      "nhanThongSo": "Đơn giá chủ trọ thu",
+      "donVi": "đ/kWh",
+      "buocNhap": 500,
+      "giaTriGoiY": 4000,
+      "canSanLuong": true
+    },
+    {
+      "ma": "dauNguoi",
+      "ten": "Khoán theo đầu người",
+      "nhanThongSo": "Số tiền mỗi người một tháng",
+      "donVi": "đ/người",
+      "buocNhap": 10000,
+      "giaTriGoiY": 150000,
+      "canSanLuong": false
+    },
+    {
+      "ma": "caPhong",
+      "ten": "Khoán cả phòng, không đo đồng hồ",
+      "nhanThongSo": "Số tiền cả phòng một tháng",
+      "donVi": "đ/tháng",
+      "buocNhap": 10000,
+      "giaTriGoiY": 300000,
+      "canSanLuong": false
+    },
+    {
+      "ma": "tongTien",
+      "ten": "Tôi chỉ biết tổng tiền ghi trên giấy thu",
+      "nhanThongSo": "Tổng tiền điện kỳ này",
+      "donVi": "đ",
+      "buocNhap": 1000,
+      "giaTriGoiY": 740000,
+      "canSanLuong": false
+    }
+  ],
+  "ghiChuCachThuDien": "Phần điện không có lựa chọn 'chia lại đúng theo hóa đơn' vì mức đúng theo quy định do pricing-engine.js tính, nếu lấy lại làm đầu vào sẽ thành vòng lặp. Người dùng gặp trường hợp đó chọn 'tổng tiền ghi trên giấy thu'."
 }

@@ -208,6 +208,87 @@ function dienGiaiDoiChieu(dc) {
   };
 }
 
+/**
+ * Sinh nội dung PHÂN TÍCH cách tính bậc thang (hiển thị khi người dùng
+ * bấm mở). Giải thích cặn kẽ nguyên lý lũy tiến, so sánh với cách tính
+ * sai (nhân đơn giá phẳng), và minh họa bằng chính con số của người dùng.
+ * @returns {string} HTML
+ */
+function phanTichBacThang(kq) {
+  if (kq.cheDo === "GIA_CO_DINH_MOT_BAC") {
+    return (
+      "<h4>Trường hợp của bạn: giá cố định một bậc</h4>" +
+      "<p>Vì không kê khai đủ số người thuê, toàn bộ sản lượng bị áp một " +
+      "đơn giá duy nhất (bậc 3), không được chia bậc lũy tiến. Đây là lý do " +
+      "cách tính này thường đắt hơn: bạn không được hưởng phần điện giá rẻ ở " +
+      "các bậc thấp.</p>" +
+      "<h4>Nếu kê khai đủ số người</h4>" +
+      "<p>Sản lượng sẽ được chia bậc như phần giải thích dưới đây, và số tiền " +
+      "gần như luôn thấp hơn.</p>" +
+      phanNguyenLyChung()
+    );
+  }
+
+  // Dựng minh họa từ chính các bậc thực tế người dùng đang dùng
+  const bacDung = kq.chiTiet.filter((c) => c.suDung);
+  let minhHoa = "<h4>Áp dụng với số liệu của bạn</h4>";
+  minhHoa +=
+    `<p>Bạn dùng <strong>${dinhDangSo(kq.soKwh)} kWh</strong>` +
+    (kq.dinhMuc !== null
+      ? `, định mức <strong>${dinhDangSo(kq.dinhMuc)}</strong> (từ ${
+          kq.soNguoiThue
+        } người).`
+      : ".") +
+    " Sản lượng được lấp dần từ bậc thấp lên:</p>";
+  minhHoa += '<div class="cong-thuc">';
+  minhHoa += bacDung
+    .map(
+      (c) =>
+        `Bậc ${c.bac}: ${dinhDangSo(c.sanLuong)} kWh × ${dinhDangTien(
+          c.donGia
+        )} = ${dinhDangTien(c.thanhTien)}`
+    )
+    .join("<br>");
+  minhHoa += `<br>─────────<br>Cộng lại = <strong>${dinhDangTien(
+    kq.tienTruocThue
+  )}</strong> (chưa thuế)`;
+  minhHoa += "</div>";
+
+  // So sánh với cách tính sai
+  const donGiaCaoNhat = bacDung.length
+    ? bacDung[bacDung.length - 1].donGia
+    : 0;
+  const cachSai = kq.soKwh * donGiaCaoNhat;
+  let soSanh = "";
+  if (cachSai > kq.tienTruocThue) {
+    soSanh =
+      '<div class="so-sanh-sai">' +
+      `<strong>So với cách tính SAI thường gặp:</strong> nếu lấy đơn giá bậc ` +
+      `cao nhất (${dinhDangTien(donGiaCaoNhat)}) nhân cho toàn bộ ` +
+      `${dinhDangSo(kq.soKwh)} kWh, số tiền sẽ là ${dinhDangTien(cachSai)} — ` +
+      `cao hơn <strong>${dinhDangTien(
+        cachSai - kq.tienTruocThue
+      )}</strong>. Cách tính lũy tiến đúng giúp bạn không bị tính oan.` +
+      "</div>";
+  }
+
+  return phanNguyenLyChung() + minhHoa + soSanh;
+}
+
+function phanNguyenLyChung() {
+  return (
+    "<h4>Nguyên lý biểu giá bậc thang lũy tiến</h4>" +
+    "<p>Giá điện sinh hoạt chia thành nhiều bậc. Mỗi bậc chỉ áp dụng cho " +
+    "phần sản lượng nằm trong khoảng của bậc đó, <strong>không</strong> áp cho " +
+    "toàn bộ. Càng dùng nhiều, phần vượt lên bậc trên mới chịu giá cao hơn — " +
+    "nhằm khuyến khích tiết kiệm điện.</p>" +
+    "<h4>Định mức theo số người thuê</h4>" +
+    "<p>Nhà trọ nhiều người được nhân rộng ngưỡng mỗi bậc (4 người = 1 định " +
+    "mức). Nhờ vậy phòng đông người được hưởng nhiều kWh giá rẻ hơn, thay vì " +
+    "bị đẩy nhanh lên bậc giá cao như một hộ độc thân.</p>"
+  );
+}
+
 const api = {
   dinhDangTien,
   dinhDangSo,
@@ -215,6 +296,7 @@ const api = {
   dienGiaiDien,
   dienGiaiNuoc,
   dienGiaiDoiChieu,
+  phanTichBacThang,
 };
 
 if (typeof module !== "undefined" && module.exports) {

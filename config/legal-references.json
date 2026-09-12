@@ -10,6 +10,18 @@
     "moTa": "Hành vi thu tiền điện của người thuê cao hơn giá quy định."
   },
 
+  "khungGiaNuoc": {
+    "canCu": "Thông tư 44/2021/TT-BTC ngày 18/6/2021 của Bộ Tài chính, hiệu lực 05/08/2021",
+    "ghiChu": "Đây là KHUNG giá (giá sàn – giá trần) cho mức giá bán lẻ nước sạch bình quân. Giá cụ thể do UBND cấp tỉnh quyết định trong khung này, nên mỗi địa phương một khác. Các mức dưới đây ĐÃ bao gồm thuế GTGT.",
+    "khung": [
+      { "khuVuc": "Đô thị đặc biệt, đô thị loại 1", "toiThieu": 3500, "toiDa": 18000 },
+      { "khuVuc": "Đô thị loại 2, 3, 4, 5", "toiThieu": 3000, "toiDa": 15000 },
+      { "khuVuc": "Khu vực nông thôn", "toiThieu": 2000, "toiDa": 11000 }
+    ],
+    "tranCaoNhat": 18000,
+    "ghiChuCanhBao": "Nếu chủ trọ thu cao hơn 18.000 đồng/m³ (mức trần cao nhất toàn quốc, đã gồm VAT) thì gần như chắc chắn vượt khung giá nhà nước cho phép."
+  },
+
   "vanBanThamChieu": [
     {
       "soHieu": "Quyết định 1279/QĐ-BCT",
@@ -30,6 +42,16 @@
       "soHieu": "Nghị định 133/2026/NĐ-CP",
       "ngay": "hiệu lực 25/05/2026",
       "noiDung": "Mức xử phạt đối với hành vi thu tiền điện cao hơn giá quy định."
+    },
+    {
+      "soHieu": "Thông tư 44/2021/TT-BTC",
+      "ngay": "18/06/2021, hiệu lực 05/08/2021",
+      "noiDung": "Quy định khung giá, nguyên tắc, phương pháp xác định giá nước sạch sinh hoạt. Khung giá bán lẻ bình quân: nông thôn 2.000–11.000 đ/m³; đô thị loại 2–5 là 3.000–15.000 đ/m³; đô thị đặc biệt và loại 1 là 3.500–18.000 đ/m³ (đã gồm VAT)."
+    },
+    {
+      "soHieu": "Thông tư 219/2013/TT-BTC",
+      "ngay": "khoản 1 Điều 10",
+      "noiDung": "Nước sạch phục vụ sinh hoạt chịu thuế GTGT với thuế suất 5% (khác với điện sinh hoạt)."
     }
   ]
 }

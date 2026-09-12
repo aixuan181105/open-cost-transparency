@@ -53,7 +53,7 @@
   // ----------------------------------------------------------------
   async function napCauHinh() {
     try {
-      const chong = "?v=0.2.0"; // đổi số này mỗi lần cập nhật config để tránh cache cũ
+      const chong = "?v=0.6.0"; // đổi số này mỗi lần cập nhật config để tránh cache cũ
       const [bieuGia, vat, nuoc, phapLy] = await Promise.all([
         fetch("./config/electricity-tiers.json" + chong).then(kiemTraPhanHoi),
         fetch("./config/vat.json" + chong).then(kiemTraPhanHoi),
@@ -94,17 +94,6 @@
     // Ngày mặc định = hôm nay
     $("ngay-tinh").value = new Date().toISOString().slice(0, 10);
 
-    // Danh sách địa phương cho phần nước — sinh từ config, không viết cứng
-    const chon = $("dia-phuong");
-    chon.innerHTML = "";
-    CAU_HINH.nuoc.diaPhuong.forEach((dp) => {
-      const o = document.createElement("option");
-      o.value = dp.ma;
-      o.textContent = dp.ten;
-      chon.appendChild(o);
-    });
-    capNhatGhiChuDiaPhuong();
-
     // Tab căn cứ pháp lý
     veBieuGiaGoc();
     veDanhSachVanBan();
@@ -112,24 +101,126 @@
     // Chân trang
     const bg = E.chonTheoNgay(CAU_HINH.bieuGia.bieuGia, $("ngay-tinh").value);
     $("chan-trang-cau-hinh").textContent =
-      `Biểu giá phiên bản ${bg.phienBan} · ${CAU_HINH.nuoc.diaPhuong.length} địa phương trong cấu hình`;
+      `Biểu giá điện phiên bản ${bg.phienBan}`;
   }
 
-  function capNhatGhiChuDiaPhuong() {
-    const dp = CAU_HINH.nuoc.diaPhuong.find(
-      (d) => d.ma === $("dia-phuong").value
-    );
-    if (!dp) return;
+  // Danh sách các bậc giá nước người dùng nhập (cho phương thức bậc thang).
+  // Giá trị mặc định minh họa theo hệ số bậc thang của Thông tư 44/2021/TT-BTC
+  // (nhóm hộ dân cư: đến 10m³ hệ số 1; trên 10–20m³ hệ số ~1,2; trên 20–30m³
+  // hệ số tối đa 1,5), lấy giá bình quân tham chiếu ~8.000đ/m³. Người dùng nên
+  // sửa lại theo đúng giá chủ trọ đang thu.
+  let CAC_BAC_NUOC = [
+    { nhanDinhMuc: 1.0, donGia: 8000 },
+    { nhanDinhMuc: 2.0, donGia: 9600 },
+    { nhanDinhMuc: null, donGia: 12000 },
+  ];
 
-    const moTa = {
-      BAC_THANG_DINH_MUC: `Lũy tiến theo định mức ${dp.dinhMucM3NguoiThang} m³/người/tháng — đúng theo biểu giá địa phương.`,
-      GIA_PHANG: "Một đơn giá duy nhất cho mọi m³ — cách chủ trọ thường thu, không theo biểu giá.",
-      KHOAN_DAU_NGUOI: "Khoán cố định theo đầu người, không căn cứ lượng nước thực dùng.",
+  /** Đọc thông số biểu thu nước từ form theo kiểu người dùng chọn. */
+  function docBieuThuNuoc() {
+    const kieu = $("kieu-thu-nuoc").value;
+    const phi = (Number($("nuoc-phi-moi-truong").value) || 0) / 100;
+
+    if (kieu === "GIA_PHANG") {
+      return {
+        phuongThuc: "GIA_PHANG",
+        ten: "Chủ trọ thu giá cố định mỗi m³",
+        donGiaPhang: Number($("nuoc-don-gia-phang").value) || 0,
+        phiBaoVeMoiTruong: phi,
+      };
+    }
+    if (kieu === "KHOAN_DAU_NGUOI") {
+      return {
+        phuongThuc: "KHOAN_DAU_NGUOI",
+        ten: "Chủ trọ khoán theo đầu người",
+        khoanMoiNguoiThang: Number($("nuoc-khoan").value) || 0,
+      };
+    }
+    // BẬC THANG
+    return {
+      phuongThuc: "BAC_THANG_DINH_MUC",
+      ten: "Bậc thang theo định mức",
+      dinhMucM3NguoiThang: Number($("nuoc-dinh-muc").value) || 4,
+      bacThang: CAC_BAC_NUOC,
+      phiBaoVeMoiTruong: phi,
     };
-    $("ghi-chu-dia-phuong").textContent = moTa[dp.phuongThuc] || "";
+  }
 
-    // Khoán theo đầu người thì không cần nhập m³
-    $("nhom-so-m3").hidden = dp.phuongThuc === "KHOAN_DAU_NGUOI";
+  function khoiTaoNuocTuNhap() {
+    // Điền danh sách địa phương làm chuẩn đối chiếu (từ config, không viết cứng)
+    const chon = $("chuan-nuoc");
+    CAU_HINH.nuoc.diaPhuong.forEach((dp) => {
+      const o = document.createElement("option");
+      o.value = dp.ma;
+      o.textContent = dp.ten;
+      chon.appendChild(o);
+    });
+    capNhatGhiChuKieuThu();
+    veCacBacNuoc();
+  }
+
+  function capNhatGhiChuKieuThu() {
+    const kieu = $("kieu-thu-nuoc").value;
+    const moTa = {
+      GIA_PHANG:
+        "Chủ trọ thu một đơn giá cho mọi m³. Đây là cách phổ biến nhất ở nhà trọ, thường cao hơn biểu giá nhà nước.",
+      BAC_THANG_DINH_MUC:
+        "Tính lũy tiến: mỗi người được một định mức m³ giá rẻ, phần vượt tính giá cao hơn. Đúng theo biểu giá địa phương.",
+      KHOAN_DAU_NGUOI:
+        "Khoán một khoản cố định mỗi người, không căn cứ lượng nước thực dùng.",
+    };
+    $("ghi-chu-kieu-thu").textContent = moTa[kieu] || "";
+
+    // Hiện đúng nhóm ô nhập theo kiểu thu
+    $("nhom-nuoc-phang").hidden = kieu !== "GIA_PHANG";
+    $("nhom-nuoc-bac-thang").hidden = kieu !== "BAC_THANG_DINH_MUC";
+    $("nhom-nuoc-khoan").hidden = kieu !== "KHOAN_DAU_NGUOI";
+
+    // Khoán thì không cần nhập m³; phí môi trường cũng không áp cho khoán
+    $("nhom-so-m3").hidden = kieu === "KHOAN_DAU_NGUOI";
+  }
+
+  /** Vẽ danh sách ô nhập các bậc giá nước (phương thức bậc thang). */
+  function veCacBacNuoc() {
+    const o = $("nuoc-cac-bac");
+    o.innerHTML = "";
+    CAC_BAC_NUOC.forEach((b, i) => {
+      const laBacCuoi = i === CAC_BAC_NUOC.length - 1;
+      const dong = document.createElement("div");
+      dong.className = "bac-nuoc";
+      dong.innerHTML =
+        `<span class="bac-nuoc__nhan">Bậc ${i + 1}</span>` +
+        (laBacCuoi
+          ? `<span class="bac-nuoc__den">phần còn lại</span>`
+          : `<input type="number" class="bac-nuoc__nhan-dm" data-i="${i}" min="0.1" step="0.5" value="${b.nhanDinhMuc}" title="Tới mấy lần định mức" />`) +
+        `<input type="number" class="bac-nuoc__gia" data-i="${i}" min="0" step="500" value="${b.donGia}" placeholder="đ/m³" />` +
+        (CAC_BAC_NUOC.length > 1
+          ? `<button type="button" class="bac-nuoc__xoa" data-i="${i}" title="Xóa bậc">×</button>`
+          : "");
+      o.appendChild(dong);
+    });
+
+    // Gắn sự kiện cho các ô vừa tạo
+    o.querySelectorAll(".bac-nuoc__nhan-dm").forEach((el) =>
+      el.addEventListener("input", (e) => {
+        CAC_BAC_NUOC[Number(e.target.dataset.i)].nhanDinhMuc = Number(
+          e.target.value
+        );
+        tinhToan();
+      })
+    );
+    o.querySelectorAll(".bac-nuoc__gia").forEach((el) =>
+      el.addEventListener("input", (e) => {
+        CAC_BAC_NUOC[Number(e.target.dataset.i)].donGia = Number(e.target.value);
+        tinhToan();
+      })
+    );
+    o.querySelectorAll(".bac-nuoc__xoa").forEach((el) =>
+      el.addEventListener("click", (e) => {
+        CAC_BAC_NUOC.splice(Number(e.target.dataset.i), 1);
+        veCacBacNuoc();
+        tinhToan();
+      })
+    );
   }
 
   function veBieuGiaGoc() {
@@ -161,6 +252,23 @@
     });
   }
 
+  function veKhungGiaNuoc() {
+    const kg = CAU_HINH.phapLy.khungGiaNuoc;
+    if (!kg) return;
+    $("mo-ta-khung-nuoc").textContent = `${kg.canCu}. ${kg.ghiChu}`;
+    const tbody = $("bang-khung-nuoc");
+    tbody.innerHTML = "";
+    kg.khung.forEach((k) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        `<td>${k.khuVuc}</td>` +
+        `<td class="phai">${k.toiThieu.toLocaleString("vi-VN")}</td>` +
+        `<td class="phai">${k.toiDa.toLocaleString("vi-VN")}</td>`;
+      tbody.appendChild(tr);
+    });
+    $("canh-bao-khung-nuoc").textContent = kg.ghiChuCanhBao;
+  }
+
   // ----------------------------------------------------------------
   // TÍNH TOÁN VÀ HIỂN THỊ
   // ----------------------------------------------------------------
@@ -173,9 +281,12 @@
     const coKeKhai =
       document.querySelector('input[name="keKhai"]:checked').value === "co";
     const soNguoiThue = Number($("so-nguoi").value) || 1;
-    const soKwh = Number($("so-kwh").value) || 0;
     const thucThuDien = Number($("tien-chu-tro-thu-dien").value) || 0;
     const batNuoc = $("bat-tinh-nuoc").checked;
+
+    // Chỉ số đồng hồ (nếu người dùng chọn) đã được lớp hợp nhất quy đổi
+    // về #so-kwh. Lõi điện luôn chỉ nhận đúng một sản lượng đầu vào.
+    const soKwh = Number($("so-kwh").value) || 0;
 
     try {
       // --- Điện ---
@@ -189,17 +300,19 @@
       // --- Nước (tùy chọn) ---
       let kqNuoc = null;
       if (batNuoc) {
+        const soM3Nuoc = Number($("so-m3").value) || 0;
         kqNuoc = E.tinhTienNuoc(
           {
-            soM3: Number($("so-m3").value) || 0,
+            soM3: soM3Nuoc,
             soNguoiThue,
-            maDiaPhuong: $("dia-phuong").value,
+            bieuThu: docBieuThuNuoc(),
             ngayTinh,
           },
           CAU_HINH.nuoc,
           CAU_HINH.vat
         );
         veKetQuaNuoc(kqNuoc);
+        veSoSanhChuanNuoc(kqNuoc, soM3Nuoc, soNguoiThue, ngayTinh);
       }
       $("the-nuoc").hidden = !batNuoc;
 
@@ -295,6 +408,60 @@
     $("can-cu-dien").textContent = `Căn cứ: ${kq.canCuBieuGia}`;
   }
 
+  /**
+   * So sánh tiền nước chủ trọ thu (kiểu người dùng nhập) với tiền nước
+   * tính theo BIỂU GIÁ CHÍNH THỨC của tỉnh được chọn làm chuẩn. Đây là
+   * phần "minh bạch" thật: đối chiếu với nguồn độc lập (quyết định của
+   * UBND tỉnh), không phải với chính giá chủ trọ.
+   */
+  function veSoSanhChuanNuoc(kqChuTro, soM3, soNguoiThue, ngayTinh) {
+    const maChuan = $("chuan-nuoc").value;
+    const hop = $("so-sanh-chuan-nuoc");
+
+    // Không chọn chuẩn, hoặc đang ở kiểu khoán (không so theo m³ được)
+    if (!maChuan || kqChuTro.phuongThuc === "KHOAN_DAU_NGUOI") {
+      hop.hidden = true;
+      return;
+    }
+
+    let kqChuan;
+    try {
+      kqChuan = E.tinhTienNuoc(
+        { soM3, soNguoiThue, maDiaPhuong: maChuan, ngayTinh },
+        CAU_HINH.nuoc,
+        CAU_HINH.vat
+      );
+    } catch (e) {
+      hop.hidden = true;
+      return;
+    }
+
+    hop.hidden = false;
+    $("so-sanh-chuan-tieu-de").textContent =
+      "Đối chiếu với biểu giá chính thức: " + kqChuan.tenDiaPhuong;
+    $("so-sanh-chu-tro").textContent = X.dinhDangTien(kqChuTro.tongThanhToan);
+    $("so-sanh-chuan-nhan").textContent = `Theo ${kqChuan.tenDiaPhuong} (đúng quy định):`;
+    $("so-sanh-chuan-gia").textContent = X.dinhDangTien(kqChuan.tongThanhToan);
+
+    const chenh = kqChuTro.tongThanhToan - kqChuan.tongThanhToan;
+    const kl = $("so-sanh-ket-luan");
+    if (chenh > 0) {
+      hop.className = "hop-so-sanh hop-so-sanh--do";
+      kl.innerHTML =
+        `Chủ trọ đang thu cao hơn biểu giá ${kqChuan.tenDiaPhuong} ` +
+        `<strong>${X.dinhDangTien(chenh)}</strong> cho ${X.dinhDangSo(soM3)} m³. ` +
+        `Bạn nên đối chiếu lại với chủ trọ.`;
+    } else if (chenh < 0) {
+      hop.className = "hop-so-sanh hop-so-sanh--xanh";
+      kl.innerHTML =
+        `Mức chủ trọ thu thấp hơn biểu giá ${kqChuan.tenDiaPhuong} ` +
+        `${X.dinhDangTien(Math.abs(chenh))}.`;
+    } else {
+      hop.className = "hop-so-sanh hop-so-sanh--xanh";
+      kl.textContent = `Mức chủ trọ thu khớp với biểu giá ${kqChuan.tenDiaPhuong}.`;
+    }
+  }
+
   function veKetQuaNuoc(kq) {
     const ten = {
       BAC_THANG_DINH_MUC: "Lũy tiến theo định mức",
@@ -310,7 +477,21 @@
 
     veDienGiai($("dien-giai-nuoc"), X.dienGiaiNuoc(kq));
     veBangBac($("bang-nuoc"), $("bang-nuoc-chan"), kq, "m³");
-    $("can-cu-nuoc").textContent = `${kq.tenDiaPhuong} — ${kq.canCu}`;
+
+    // Đối chiếu đơn giá bình quân với khung giá nhà nước (Thông tư 44/2021)
+    let canCu = `${kq.tenDiaPhuong} — ${kq.canCu}`;
+    const tran = CAU_HINH.phapLy.khungGiaNuoc
+      ? CAU_HINH.phapLy.khungGiaNuoc.tranCaoNhat
+      : null;
+    if (tran && kq.donGiaBinhQuan && kq.donGiaBinhQuan > tran) {
+      canCu +=
+        ` ⚠️ Đơn giá bình quân ${X.dinhDangTien(kq.donGiaBinhQuan)}/m³ VƯỢT mức ` +
+        `trần cao nhất toàn quốc (${X.dinhDangTien(tran)}/m³ theo Thông tư ` +
+        `44/2021/TT-BTC) — gần như chắc chắn cao hơn giá nhà nước cho phép.`;
+    } else if (kq.donGiaBinhQuan) {
+      canCu += ` Đơn giá bình quân: ${X.dinhDangTien(kq.donGiaBinhQuan)}/m³.`;
+    }
+    $("can-cu-nuoc").textContent = canCu;
   }
 
   function veDienGiai(oChua, cacBuoc) {
@@ -476,9 +657,10 @@
       tinhToan();
     });
 
-    // Tính lại ngay khi người dùng đổi số — phản hồi tức thì
-    ["so-kwh", "so-nguoi", "so-m3", "tien-chu-tro-thu-dien", "tien-chu-tro-thu-nuoc"].forEach(
-      (id) => $(id).addEventListener("input", tinhToan)
+    // Các ô điện gốc. Phần nhập liệu thân thiện (đọc chỉ số, cách chủ
+    // trọ thu) được src/hop-nhat.js đồng bộ vào hai ô này trước khi gọi lại.
+    ["so-kwh", "so-nguoi", "tien-chu-tro-thu-dien"].forEach((id) =>
+      $(id).addEventListener("input", tinhToan)
     );
     document
       .querySelectorAll('input[name="keKhai"]')
@@ -486,16 +668,6 @@
 
     $("ngay-tinh").addEventListener("change", () => {
       veBieuGiaGoc();
-      tinhToan();
-    });
-
-    $("bat-tinh-nuoc").addEventListener("change", () => {
-      $("khoi-nuoc").hidden = !$("bat-tinh-nuoc").checked;
-      tinhToan();
-    });
-
-    $("dia-phuong").addEventListener("change", () => {
-      capNhatGhiChuDiaPhuong();
       tinhToan();
     });
 
@@ -519,8 +691,6 @@
     $("nut-dat-lai").addEventListener("click", () => {
       setTimeout(() => {
         $("ngay-tinh").value = new Date().toISOString().slice(0, 10);
-        $("khoi-nuoc").hidden = true;
-        $("the-nuoc").hidden = true;
         tinhToan();
       }, 0);
     });
