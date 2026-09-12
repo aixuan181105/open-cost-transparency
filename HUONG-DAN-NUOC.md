@@ -10,7 +10,7 @@ Tài liệu này đi kèm 6 tệp trong bản giao: `config/water-rates.json`,
 
 ### 1.1 Bản cũ sai ở đâu
 
-Khối nước trong `index.html` bản 0.2.1 có 3 ô nhập: địa phương, số m³, và
+Khối nước trong `index.html` bản 1.0.0 có 3 ô nhập: địa phương, số m³, và
 **"Số tiền nước chủ trọ đang thu (đ)"**. Ô thứ ba là chỗ hỏng, vì nó bắt người
 dùng tự làm phép nhân trước khi mở phần mềm ra.
 
@@ -42,7 +42,7 @@ Câu này quyết định toàn bộ thiết kế phần nhập liệu. Hệ qu�
 
 ### 1.3 Bảng đếm ô nhập
 
-| | Bản 0.2.1 | Bản mới |
+| | Bản 1.0.0 | Bản mới |
 | --- | --- | --- |
 | Nơi ở hiện tại | 1 (chọn) | 1 (chọn) |
 | Số nước dùng | 1 (chỉ m³) | 1 (m³) **hoặc** 2 (chỉ số đầu/cuối) |
@@ -76,11 +76,7 @@ Với **tiền điện**, thu cao hơn giá quy định có chế tài rõ: ph�
 và buộc nộp lại số lợi bất hợp pháp (khoản 7 Điều 12 Nghị định 134/2013/NĐ-CP,
 sửa đổi bởi Nghị định 17/2022/NĐ-CP).
 
-Với **tiền nước, không có điều khoản xử phạt hành chính tương đương**. Đừng copy
-cảnh báo của phần điện sang phần nước. Trong `config/water-rates.json` tôi tách
-riêng `canCuKhiThuSai.nuoc` và `canCuKhiThuSai.dien` đúng vì lý do này. Ban giám
-khảo có người biết luật; một câu "chủ trọ có thể bị phạt 20–30 triệu" gắn vào
-tiền nước là mất điểm tin cậy của cả sản phẩm.
+Với **tiền nước, không có điều khoản xử phạt hành chính tương đương**. 
 
 ---
 
@@ -90,18 +86,13 @@ Không thêm công cụ mới nào. Lý do:
 
 - **Vẫn HTML/CSS/JS thuần, zero dependency.** Dự án đã tuyên bố zero-dependency
   trong README, và đó là lợi thế thật khi trình diễn (không sợ mất mạng, không
-  có điểm trừ về bundling bằng công cụ nguồn đóng). Thêm React hay Tailwind vào
-  lúc này chỉ để "trông hiện đại" là tự bắn vào chân.
+  có điểm trừ về bundling bằng công cụ nguồn đóng).
 - **Không dùng TypeScript.** Sẽ cần bước biên dịch, mà phần mã cần bảo vệ chỉ là
   một lõi tính toán ~400 dòng đã được 75 ca test phủ. Kiểm thử thay được kiểu
   tĩnh ở quy mô này.
 - **Không dùng PostgreSQL/MongoDB/FastAPI.** Sản phẩm không lưu dữ liệu người
-  dùng, không có tài khoản. Thêm máy chủ là thêm thứ phải triển khai và có thể
-  chết giữa buổi demo.
+  dùng, không có tài khoản. 
 - **Không cần Python.** Toàn bộ nằm trong trình duyệt.
-
-Cái duy nhất đáng học thêm trong giai đoạn này là **Node.js ở mức chạy được
-`node tests/...`** — đã có sẵn trong dự án.
 
 Đây là câu trả lời nên dùng nếu bị hỏi "sao không dùng framework": *vì bài toán
 không cần, và mỗi dependency là một rủi ro triển khai*. Câu trả lời đó mạnh hơn
@@ -298,7 +289,7 @@ và vẫn đủ thông tin cho người dùng.
 `CHANGELOG.md`, thêm vào đầu:
 
 ```markdown
-## [0.3.0] - 2026-09-[dd]
+## [1.0.0] - 2026-09-12
 
 ### Thay đổi
 - Phần tiền nước: bỏ ô "Số tiền nước chủ trọ đang thu". Người dùng chọn cách chủ
@@ -329,11 +320,6 @@ và vẫn đủ thông tin cho người dùng.
   "test": "node tests/pricing-engine.test.js && node tests/water-engine.test.js"
 }
 ```
-
-`README.md`: sửa mục **Tính tiền nước** và mục **Kiểm thử** (số ca giờ là 22 + 75),
-và bổ sung `src/water-engine.js`, `src/water-ui.js`, `tests/water-engine.test.js`
-vào cây thư mục.
-
 ### Bước 8 — Commit theo Conventional Commits
 
 ```bash
@@ -371,41 +357,3 @@ buộc: `dia-phuong`, `so-m3`, `chi-so-dau`, `chi-so-cuoi`, `so-nguoi`,
 `nuoc-chu-tro`, `nuoc-quy-dinh`, `nuoc-chenh-lech`, `dien-giai-nuoc`,
 `bang-nuoc`, `bang-nuoc-chan`. Dán lại PATCH 1 và PATCH 2 cho đủ.
 
----
-
-## 6. Việc phải làm trước khi nộp
-
-- [ ] **Xác minh lại `khiChuaCoDinhMuc`.** Trường này trong config đang đặt
-      `canKiemChung: true`. Biểu giá 6.700/12.900/14.400 và tỷ lệ thoát nước 30%
-      tôi đã đối chiếu nhiều nguồn và chắc chắn. Nhưng quy tắc "thuê bao chưa
-      được cấp định mức thì áp đơn giá bậc mấy" thì cần hỏi trực tiếp SAWACO
-      hoặc công ty cấp nước ở khu vực bạn, hoặc đọc lại nguyên văn Quyết định
-      25/2019/QĐ-UBND. Nếu chưa xác minh được, ghi rõ trong README là giả định
-      và để nguyên `canKiemChung: true`. **Ghi rõ một giả định thì mất ít điểm
-      hơn nhiều so với bị phát hiện một con số bịa.**
-- [ ] Có một hóa đơn nước thật (của bạn hoặc của một người thuê trọ). Nhập vào
-      phần mềm. Nếu tổng lệch quá vài trăm đồng, tìm cho ra lý do — có thể là
-      thuế GTGT dịch vụ thoát nước đã về 10%, hoặc địa bàn sau sáp nhập dùng
-      biểu giá khác. Ảnh chụp hóa đơn đặt cạnh ảnh chụp màn hình phần mềm là
-      bằng chứng thuyết phục nhất trong toàn bộ bài thuyết trình.
-- [ ] Ảnh chụp màn hình thật thay cho `docs/screenshots/demo-main.png`.
-- [ ] Điền các chỗ `[dd]`, `[mã commit đầy đủ]`, `[ví dụ: ...]` còn sót trong
-      README và CHANGELOG. Ban giám khảo đọc README trước khi chạy code.
-- [ ] `npm test` xanh trên máy sạch: `git clone` vào thư mục mới rồi chạy.
-
----
-
-## 7. Nếu còn thời gian — theo thứ tự đáng làm
-
-1. **Thêm 2–3 tỉnh/thành nữa** vào `water-rates.json`. Chỉ là thêm dữ liệu. Đây
-   là minh chứng sống cho luận điểm "tách cấu hình khỏi mã nguồn" mà README đã
-   nêu — và nó chứng minh bằng hành động, không phải bằng lời.
-2. **Đưa phần nước vào tab Kiểm thử trên giao diện**, dùng chung tệp test như
-   phần điện đang làm. Bấm nút chạy test ngay trước mặt ban giám khảo có sức
-   thuyết phục rất cao.
-3. **Sinh biểu giá nước ở tab Căn cứ pháp lý** từ `water-rates.json`, giống cách
-   tab đó đang sinh biểu giá điện.
-4. Nút "Xuất bản đối chiếu" ra PDF một trang để người thuê đưa cho chủ trọ.
-
-Đừng làm gì nằm ngoài 4 việc trên. Phạm vi hiện tại đã đủ để thành một sản phẩm
-hoàn chỉnh; thêm tính năng vào lúc này là rủi ro, không phải điểm cộng.
