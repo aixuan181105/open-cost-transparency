@@ -6,6 +6,8 @@
  *
  * Không cần cài thêm thư viện nào. Các ca kiểm thử được định nghĩa ở
  * tests/test-cases.js và dùng chung với tab "Kiểm thử" trên giao diện.
+ * MIT License
+ * Copyright (c) 2026 aixuan181105
  * ==================================================================
  */
 const path = require("path");
