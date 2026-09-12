@@ -245,7 +245,7 @@ Giấy phép đầy đủ tại: [LICENSE](./LICENSE)
 
 Xem các phiên bản đã phát hành tại [Releases](https://github.com/aixuan181105/open-cost-transparency/releases).
 
-Phiên bản dự thi: **v[1.0.0]** — release ngày [12/09/2026], commit: `[mã commit đầy đủ]`
+Phiên bản dự thi: **v[1.0.0]** — release ngày [12/09/2026], commit: `9a5ef7e`
 
 ---
 

@@ -23,6 +23,6 @@ dự án tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - Diễn giải từng bước tính toán (`explain.js`) bằng tiếng Việt dễ hiểu.
 - Giao diện web đơn giản (`index.html`, `style.css`, `app.js`).
 - Cấu hình biểu giá và thuế tách riêng khỏi mã nguồn (`config/*.json`).
-- Bộ 8 test case cho lõi tính toán (`tests/pricing-engine.test.js`).
+- Bộ 22 test case cho lõi tính toán (`tests/pricing-engine.test.js`).
 - README, LICENSE (MIT), issue template.
 
