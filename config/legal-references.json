@@ -1,0 +1,35 @@
+{
+  "_doc": "CĂN CỨ PHÁP LÝ hiển thị trong ứng dụng và dùng cho phần cảnh báo thu vượt giá. Tách khỏi mã nguồn để khi văn bản được thay thế thì chỉ sửa file này.",
+  "_canhBao": "Đối chiếu lại số hiệu văn bản và mức xử phạt với văn bản hiện hành trước khi nộp bài.",
+
+  "xuPhatThuVuotGia": {
+    "canCu": "Nghị định 133/2026/NĐ-CP, hiệu lực từ 25/05/2026",
+    "mucPhatTu": 20000000,
+    "mucPhatDen": 30000000,
+    "ngheThuatXuLy": "Kèm nghĩa vụ hoàn trả số tiền đã thu vượt cho người thuê.",
+    "moTa": "Hành vi thu tiền điện của người thuê cao hơn giá quy định."
+  },
+
+  "vanBanThamChieu": [
+    {
+      "soHieu": "Quyết định 1279/QĐ-BCT",
+      "ngay": "09/05/2025",
+      "noiDung": "Quy định giá bán lẻ điện sinh hoạt theo 6 bậc, áp dụng từ 10/05/2025."
+    },
+    {
+      "soHieu": "Thông tư 60/2025/TT-BCT",
+      "ngay": "hiệu lực 02/12/2025",
+      "noiDung": "Quy định nhân số định mức theo số người thuê thực tế; trường hợp hợp đồng dưới 12 tháng và không kê khai đủ số người thì áp giá bậc 3 cho toàn bộ sản lượng, đồng thời chủ nhà không được thu vượt hóa đơn của đơn vị bán điện."
+    },
+    {
+      "soHieu": "Nghị quyết 204/2025/QH15",
+      "ngay": "hiệu lực đến 31/12/2026",
+      "noiDung": "Giảm thuế giá trị gia tăng, áp dụng cho điện sinh hoạt."
+    },
+    {
+      "soHieu": "Nghị định 133/2026/NĐ-CP",
+      "ngay": "hiệu lực 25/05/2026",
+      "noiDung": "Mức xử phạt đối với hành vi thu tiền điện cao hơn giá quy định."
+    }
+  ]
+}

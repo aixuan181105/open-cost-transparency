@@ -1,0 +1,28 @@
+{
+  "_doc": "CẤU HÌNH THUẾ GTGT theo từng thời kỳ hiệu lực. Chương trình tự chọn thuế suất đúng theo ngày tính tiền, nên khi chính sách giảm thuế hết hạn, kết quả tự động đúng mà không cần sửa code.",
+  "_canhBao": "Cần đối chiếu lại thuế suất và thời hạn hiệu lực với văn bản hiện hành trước khi nộp bài.",
+
+  "dienSinhHoat": [
+    {
+      "hieuLucTu": "2025-01-01",
+      "hieuLucDen": "2026-12-31",
+      "thueSuat": 0.08,
+      "canCu": "Nghị quyết 204/2025/QH15 về giảm thuế GTGT (hiệu lực đến hết 31/12/2026)"
+    },
+    {
+      "hieuLucTu": "2027-01-01",
+      "hieuLucDen": null,
+      "thueSuat": 0.1,
+      "canCu": "Mức thuế GTGT thông thường, áp dụng khi chính sách giảm thuế hết hiệu lực"
+    }
+  ],
+
+  "nuocSachSinhHoat": [
+    {
+      "hieuLucTu": "2023-01-01",
+      "hieuLucDen": null,
+      "thueSuat": 0.05,
+      "canCu": "Thuế GTGT đối với nước sạch phục vụ sinh hoạt"
+    }
+  ]
+}

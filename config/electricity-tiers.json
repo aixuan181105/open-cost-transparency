@@ -1,0 +1,31 @@
+{
+  "_doc": "CẤU HÌNH BIỂU GIÁ ĐIỆN SINH HOẠT. File này là DỮ LIỆU, không phải mã nguồn. Khi Bộ Công Thương điều chỉnh giá, chỉ cần thêm một phần tử mới vào mảng 'bieuGia' với 'hieuLucTu' là ngày áp dụng mới, KHÔNG cần sửa bất kỳ dòng code nào.",
+  "_canhBao": "Các đơn giá dưới đây cần được ĐỐI CHIẾU LẠI với văn bản gốc / bộ dữ liệu kiểm thử do Ban tổ chức công bố trước khi nộp bài.",
+
+  "donViDinhMuc": 4,
+  "ghiChuDinhMuc": "Cứ 4 người thuê được tính là 1 định mức của một hộ sử dụng điện. Dưới 4 người quy đổi theo tỷ lệ 1/4 định mức cho mỗi người (Thông tư 60/2025/TT-BCT).",
+
+  "khongKeKhai": {
+    "apDungBac": 3,
+    "canCu": "Thông tư 60/2025/TT-BCT",
+    "quyTac": "Hợp đồng thuê dưới 12 tháng và chủ nhà không kê khai đầy đủ số người sử dụng điện: toàn bộ sản lượng đo được tại công tơ áp dụng đơn giá của bậc 3, KHÔNG tính lũy tiến theo bậc."
+  },
+
+  "bieuGia": [
+    {
+      "phienBan": "2025-05-10",
+      "hieuLucTu": "2025-05-10",
+      "hieuLucDen": null,
+      "canCu": "Quyết định 1279/QĐ-BCT ngày 09/05/2025 của Bộ Công Thương",
+      "ghiChu": "Đơn giá chưa bao gồm thuế GTGT, đơn vị đồng/kWh.",
+      "bacThang": [
+        { "bac": 1, "tenBac": "Bậc 1 (0–50 kWh)",     "denKwh": 50,   "donGia": 1984 },
+        { "bac": 2, "tenBac": "Bậc 2 (51–100 kWh)",   "denKwh": 100,  "donGia": 2050 },
+        { "bac": 3, "tenBac": "Bậc 3 (101–200 kWh)",  "denKwh": 200,  "donGia": 2380 },
+        { "bac": 4, "tenBac": "Bậc 4 (201–300 kWh)",  "denKwh": 300,  "donGia": 2998 },
+        { "bac": 5, "tenBac": "Bậc 5 (301–400 kWh)",  "denKwh": 400,  "donGia": 3350 },
+        { "bac": 6, "tenBac": "Bậc 6 (trên 400 kWh)", "denKwh": null, "donGia": 3460 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "_doc": "CẤU HÌNH GIÁ NƯỚC SINH HOẠT theo từng địa phương. Giá nước do từng tỉnh/thành ban hành nên khác nhau. Muốn hỗ trợ thêm một tỉnh: THÊM MỘT PHẦN TỬ vào mảng 'diaPhuong' bên dưới, không cần sửa code.",
+  "_canhBao": "Các đơn giá dưới đây là số liệu MẪU để dựng khung. Bắt buộc đối chiếu với quyết định giá nước của địa phương trước khi nộp bài.",
+
+  "_schema": {
+    "phuongThuc": "Một trong ba giá trị: BAC_THANG_DINH_MUC (lũy tiến theo định mức m³/người), GIA_PHANG (một đơn giá duy nhất cho mọi m³), KHOAN_DAU_NGUOI (khoán một số tiền cố định mỗi người mỗi tháng).",
+    "dinhMucM3NguoiThang": "Chỉ dùng cho BAC_THANG_DINH_MUC. Số m³ được hưởng định mức mỗi người mỗi tháng.",
+    "bacThang[].nhanDinhMuc": "Ranh giới trên của bậc, tính theo SỐ LẦN tổng định mức. Ví dụ 1.0 = hết định mức, 1.5 = tới 1,5 lần định mức, null = không giới hạn."
+  },
+
+  "diaPhuong": [
+    {
+      "ma": "HCM",
+      "ten": "TP. Hồ Chí Minh",
+      "phuongThuc": "BAC_THANG_DINH_MUC",
+      "canCu": "Số liệu mẫu, cần cập nhật theo quyết định giá nước địa phương",
+      "dinhMucM3NguoiThang": 4,
+      "bacThang": [
+        { "bac": 1, "tenBac": "Trong định mức",            "nhanDinhMuc": 1.0,  "donGia": 6700 },
+        { "bac": 2, "tenBac": "Trên định mức đến 1,5 lần", "nhanDinhMuc": 1.5,  "donGia": 12900 },
+        { "bac": 3, "tenBac": "Trên 1,5 lần định mức",     "nhanDinhMuc": null, "donGia": 14400 }
+      ],
+      "phiBaoVeMoiTruong": 0.1,
+      "ghiChuPhi": "Phí bảo vệ môi trường đối với nước thải sinh hoạt, tính theo tỷ lệ trên tiền nước trước thuế."
+    },
+    {
+      "ma": "HN",
+      "ten": "Hà Nội",
+      "phuongThuc": "BAC_THANG_DINH_MUC",
+      "canCu": "Số liệu mẫu, cần cập nhật theo quyết định giá nước địa phương",
+      "dinhMucM3NguoiThang": 10,
+      "bacThang": [
+        { "bac": 1, "tenBac": "Đến 10 m³/người",       "nhanDinhMuc": 1.0,  "donGia": 8500 },
+        { "bac": 2, "tenBac": "Trên 10 đến 20 m³",     "nhanDinhMuc": 2.0,  "donGia": 9900 },
+        { "bac": 3, "tenBac": "Trên 20 đến 30 m³",     "nhanDinhMuc": 3.0,  "donGia": 16000 },
+        { "bac": 4, "tenBac": "Trên 30 m³",            "nhanDinhMuc": null, "donGia": 27000 }
+      ],
+      "phiBaoVeMoiTruong": 0.1
+    },
+    {
+      "ma": "KHAC_PHANG",
+      "ten": "Địa phương khác — chủ trọ thu giá phẳng",
+      "phuongThuc": "GIA_PHANG",
+      "canCu": "Không theo biểu giá địa phương, dùng để đối chiếu mức thu thực tế của chủ trọ.",
+      "donGiaPhang": 20000,
+      "phiBaoVeMoiTruong": 0
+    },
+    {
+      "ma": "KHOAN",
+      "ten": "Chủ trọ khoán theo đầu người",
+      "phuongThuc": "KHOAN_DAU_NGUOI",
+      "canCu": "Hình thức khoán phổ biến tại cơ sở cho thuê, không căn cứ theo sản lượng thực tế.",
+      "khoanMoiNguoiThang": 100000,
+      "phiBaoVeMoiTruong": 0
+    }
+  ]
+}
